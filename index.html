@@ -84,66 +84,66 @@
                 </div>
             </div>
 
-            <!-- Formulaire de création -->
+            <!-- Formulaire de création CORRIGÉ -->
             <div class="card">
                 <h3><i class="fas fa-plus-circle"></i> Créer une nouvelle mission</h3>
                 <form id="missionForm">
                     <div class="grid grid-2">
                         <div class="form-group">
                             <label for="vehicleBrand">Marque du véhicule</label>
-                            <input type="text" id="vehicleBrand" required>
+                            <input type="text" id="vehicleBrand" name="vehicleBrand" required>
                         </div>
                         <div class="form-group">
                             <label for="vehicleModel">Modèle</label>
-                            <input type="text" id="vehicleModel" required>
+                            <input type="text" id="vehicleModel" name="vehicleModel" required>
                         </div>
                         <div class="form-group">
                             <label for="vehicleYear">Année</label>
-                            <input type="number" id="vehicleYear" min="1990" max="2025" required>
+                            <input type="number" id="vehicleYear" name="vehicleYear" min="1990" max="2025" required>
                         </div>
                         <div class="form-group">
                             <label for="licensePlate">Plaque d'immatriculation</label>
-                            <input type="text" id="licensePlate" required>
+                            <input type="text" id="licensePlate" name="licensePlate" required>
                         </div>
                     </div>
 
                     <div class="grid grid-2">
                         <div class="form-group">
                             <label for="pickupLocation">Lieu de prise en charge</label>
-                            <input type="text" id="pickupLocation" required>
+                            <input type="text" id="pickupLocation" name="pickupLocation" required>
                         </div>
                         <div class="form-group">
                             <label for="deliveryLocation">Lieu de livraison</label>
-                            <input type="text" id="deliveryLocation" required>
+                            <input type="text" id="deliveryLocation" name="deliveryLocation" required>
                         </div>
                         <div class="form-group">
                             <label for="pickupDate">Date de prise en charge</label>
-                            <input type="datetime-local" id="pickupDate" required>
+                            <input type="datetime-local" id="pickupDate" name="pickupDate" required>
                         </div>
                         <div class="form-group">
                             <label for="deliveryDate">Date de livraison prévue</label>
-                            <input type="datetime-local" id="deliveryDate" required>
+                            <input type="datetime-local" id="deliveryDate" name="deliveryDate" required>
                         </div>
                     </div>
 
                     <div class="grid grid-3">
                         <div class="form-group">
                             <label for="clientName">Nom du client</label>
-                            <input type="text" id="clientName" required>
+                            <input type="text" id="clientName" name="clientName" required>
                         </div>
                         <div class="form-group">
                             <label for="clientEmail">Email du client</label>
-                            <input type="email" id="clientEmail" required>
+                            <input type="email" id="clientEmail" name="clientEmail" required>
                         </div>
                         <div class="form-group">
                             <label for="clientPhone">Téléphone du client</label>
-                            <input type="tel" id="clientPhone" required>
+                            <input type="tel" id="clientPhone" name="clientPhone" required>
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label for="urgency">Niveau d'urgence</label>
-                        <select id="urgency">
+                        <select id="urgency" name="urgency">
                             <option value="normal">Normal</option>
                             <option value="urgent">Urgent</option>
                             <option value="critical">Critique</option>
@@ -178,7 +178,7 @@
                 <form id="accessForm">
                     <div class="form-group">
                         <label for="missionCode">Code de mission</label>
-                        <input type="text" id="missionCode" placeholder="Ex: MIS-2024-001" required>
+                        <input type="text" id="missionCode" name="missionCode" placeholder="Ex: MIS-2024-001" required>
                     </div>
                     <button type="submit" class="btn btn-secondary">
                         <i class="fas fa-search"></i> Accéder à la mission
@@ -274,7 +274,7 @@
                 <!-- Observations -->
                 <div class="form-group">
                     <label for="observations">Observations</label>
-                    <textarea id="observations" rows="4" placeholder="Décrivez l'état du véhicule, les éventuels dommages ou remarques..."></textarea>
+                    <textarea id="observations" name="observations" rows="4" placeholder="Décrivez l'état du véhicule, les éventuels dommages ou remarques..."></textarea>
                 </div>
 
                 <!-- Signature -->
@@ -308,7 +308,7 @@
                 <form id="trackingForm">
                     <div class="form-group">
                         <label for="trackingCode">Code de suivi</label>
-                        <input type="text" id="trackingCode" placeholder="Ex: MIS-2024-001" required>
+                        <input type="text" id="trackingCode" name="trackingCode" placeholder="Ex: MIS-2024-001" required>
                     </div>
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-search"></i> Suivre la mission
