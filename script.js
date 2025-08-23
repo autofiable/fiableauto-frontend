@@ -268,10 +268,10 @@ class FiableAutoApp {
     async loadStats() {
         try {
             const stats = await this.apiCall('/stats');
-            document.getElementById('totalMissions').textContent = stats.total || 0;
-            document.getElementById('pendingMissions').textContent = stats.pending || 0;
-            document.getElementById('completedMissions').textContent = stats.completed || 0;
-            document.getElementById('progressMissions').textContent = stats.in_progress || 0;
+            document.getElementById('totalMissions').textContent = stats.data?.total || 0;
+            document.getElementById('pendingMissions').textContent = stats.data?.pending || 0;
+            document.getElementById('completedMissions').textContent = stats.data?.completed || 0;
+            document.getElementById('progressMissions').textContent = stats.data?.in_progress || 0;
         } catch (error) {
             console.error('Erreur chargement stats:', error);
         }
@@ -282,7 +282,32 @@ class FiableAutoApp {
         
         try {
             const formData = new FormData(document.getElementById('missionForm'));
-            const missionData = Object.fromEntries(formData.entries());
+            
+            // ✅ CORRECTION: Mapping correct des champs du formulaire
+            const missionData = {
+                vehicleBrand: formData.get('vehicleBrand') || formData.get('marqueVehicule'),
+                vehicleModel: formData.get('vehicleModel') || formData.get('modeleVehicule'),
+                vehicleYear: formData.get('vehicleYear') || formData.get('anneeVehicule'),
+                licensePlate: formData.get('licensePlate') || formData.get('plaqueImmatriculation'),
+                vin: formData.get('vin'),
+                mileage: formData.get('mileage') || formData.get('kilometrage'),
+                pickupLocation: formData.get('pickupLocation') || formData.get('lieuPriseEnCharge'),
+                deliveryLocation: formData.get('deliveryLocation') || formData.get('lieuLivraison'),
+                pickupDate: formData.get('pickupDate') || formData.get('datePriseEnCharge'),
+                deliveryDate: formData.get('deliveryDate') || formData.get('dateLivraisonPrevue'),
+                urgency: formData.get('urgency') || formData.get('niveauUrgence') || 'normal',
+                clientName: formData.get('clientName') || formData.get('nomClient'),
+                clientEmail: formData.get('clientEmail') || formData.get('emailClient'),
+                clientPhone: formData.get('clientPhone') || formData.get('telephoneClient'),
+                clientCompany: formData.get('clientCompany') || formData.get('entrepriseClient'),
+                providerName: formData.get('providerName') || formData.get('nomPrestataire'),
+                providerEmail: formData.get('providerEmail') || formData.get('emailPrestataire'),
+                providerPhone: formData.get('providerPhone') || formData.get('telephonePrestataire'),
+                observations: formData.get('observations'),
+                internalNotes: formData.get('internalNotes') || formData.get('notesInternes')
+            };
+
+            console.log('Données mission:', missionData); // Pour debug
             
             const response = await this.apiCall('/missions', {
                 method: 'POST',
@@ -292,9 +317,10 @@ class FiableAutoApp {
             this.showNotification('Mission créée avec succès!', 'success');
             document.getElementById('missionForm').reset();
             this.loadStats();
-            this.displayMissionLink(response.mission);
+            this.displayMissionLink(response.data); // ✅ CORRECTION: response.data au lieu de response.mission
             
         } catch (error) {
+            console.error('Erreur création mission:', error);
             this.showNotification('Erreur lors de la création de la mission', 'error');
         } finally {
             this.showLoading(false);
@@ -305,10 +331,10 @@ class FiableAutoApp {
         this.showLoading(true);
         
         try {
-            const mission = await this.apiCall(`/missions/${code}`);
-            this.currentMission = mission;
+            const response = await this.apiCall(`/missions/${code}`);
+            this.currentMission = response.data;
             
-            this.displayMissionDetails(mission);
+            this.displayMissionDetails(response.data);
             this.showNotification('Mission chargée avec succès!', 'success');
             
         } catch (error) {
@@ -322,8 +348,8 @@ class FiableAutoApp {
         this.showLoading(true);
         
         try {
-            const mission = await this.apiCall(`/missions/${code}`);
-            this.displayTrackingInfo(mission);
+            const response = await this.apiCall(`/missions/${code}`);
+            this.displayTrackingInfo(response.data);
             this.showNotification('Mission trouvée!', 'success');
             
         } catch (error) {
@@ -336,7 +362,7 @@ class FiableAutoApp {
     async uploadPhoto(missionId, photoType, file) {
         const formData = new FormData();
         formData.append('photo', file);
-        formData.append('type', photoType);
+        formData.append('photoType', photoType);
 
         const response = await fetch(`${API_BASE_URL}/uploads/photos/${missionId}`, {
             method: 'POST',
@@ -429,10 +455,10 @@ class FiableAutoApp {
         infoEl.innerHTML = `
             <div class="grid grid-2">
                 <div>
-                    <strong>Véhicule:</strong> ${mission.vehicle_brand} ${mission.vehicle_model} (${mission.vehicle_year})
+                    <strong>Véhicule:</strong> ${mission.vehicle_brand} ${mission.vehicle_model} (${mission.vehicle_year || 'N/A'})
                 </div>
                 <div>
-                    <strong>Plaque:</strong> ${mission.license_plate}
+                    <strong>Plaque:</strong> ${mission.license_plate || 'N/A'}
                 </div>
                 <div>
                     <strong>Client:</strong> ${mission.client_name}
@@ -473,15 +499,21 @@ class FiableAutoApp {
         
         if (mission.status === 'completed') {
             const downloadEl = document.getElementById('downloadSection');
-            downloadEl.style.display = 'block';
-            
-            const downloadBtn = document.getElementById('downloadReport');
-            downloadBtn.onclick = () => this.downloadReport(mission.id);
+            if (downloadEl) {
+                downloadEl.style.display = 'block';
+                
+                const downloadBtn = document.getElementById('downloadReport');
+                if (downloadBtn) {
+                    downloadBtn.onclick = () => this.downloadReport(mission.id);
+                }
+            }
         }
     }
 
     displayMissionLink(mission) {
         const listEl = document.getElementById('missionsList');
+        if (!listEl) return;
+        
         const missionEl = document.createElement('div');
         missionEl.className = 'mission-item';
         missionEl.innerHTML = `
@@ -596,24 +628,46 @@ class FiableAutoApp {
     }
 
     switchToPrestataire(code) {
-        document.querySelector('[data-section="prestataire"]').click();
-        document.getElementById('missionCode').value = code;
-        document.getElementById('accessForm').dispatchEvent(new Event('submit'));
+        const prestataireTab = document.querySelector('[data-section="prestataire"]');
+        if (prestataireTab) {
+            prestataireTab.click();
+            setTimeout(() => {
+                const codeInput = document.getElementById('missionCode');
+                const form = document.getElementById('accessForm');
+                if (codeInput && form) {
+                    codeInput.value = code;
+                    form.dispatchEvent(new Event('submit'));
+                }
+            }, 100);
+        }
     }
 
     switchToClient(code) {
-        document.querySelector('[data-section="client"]').click();
-        document.getElementById('trackingCode').value = code;
-        document.getElementById('trackingForm').dispatchEvent(new Event('submit'));
+        const clientTab = document.querySelector('[data-section="client"]');
+        if (clientTab) {
+            clientTab.click();
+            setTimeout(() => {
+                const codeInput = document.getElementById('trackingCode');
+                const form = document.getElementById('trackingForm');
+                if (codeInput && form) {
+                    codeInput.value = code;
+                    form.dispatchEvent(new Event('submit'));
+                }
+            }, 100);
+        }
     }
 
     showLoading(show) {
         const overlay = document.getElementById('loadingOverlay');
-        overlay.style.display = show ? 'flex' : 'none';
+        if (overlay) {
+            overlay.style.display = show ? 'flex' : 'none';
+        }
     }
 
     showNotification(message, type = 'info') {
         const notification = document.getElementById('notification');
+        if (!notification) return;
+        
         notification.textContent = message;
         notification.className = `notification ${type}`;
         
@@ -652,8 +706,10 @@ window.addEventListener('online', () => {
 window.addEventListener('offline', () => {
     if (app) {
         const statusEl = document.getElementById('connectionStatus');
-        statusEl.textContent = '🔴 Hors ligne';
-        statusEl.className = 'connection-status offline';
+        if (statusEl) {
+            statusEl.textContent = '🔴 Hors ligne';
+            statusEl.className = 'connection-status offline';
+        }
         app.showNotification('Connexion perdue', 'warning');
     }
 });
