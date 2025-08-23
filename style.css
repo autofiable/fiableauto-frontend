@@ -1,4 +1,59 @@
-/* Variables CSS */
+/* Stats améliorées - NOUVEAU */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.stat-card {
+    background: var(--white);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    text-align: center;
+    border-left: 4px solid var(--accent-orange);
+    transition: var(--transition);
+    animation: slideInUp 0.6s ease-out;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* NOUVEAU : Stats cliquables */
+.stats-clickable {
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.stats-clickable::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(249, 115, 22, 0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.stats-clickable:hover::before {
+    left: 100%;
+}
+
+.stats-clickable:hover {
+    border-left-color: var(--secondary-blue);
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+}
+
+.stats-clickable.active-filter {
+    border-left-color: var(--success-green);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(16, 185, 129, 0.02));
+    transform: translateY(-3/* Variables CSS */
 :root {
     --primary-blue: #1e3a8a;
     --secondary-blue: #3b82f6;
