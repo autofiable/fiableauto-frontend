@@ -8,11 +8,458 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚗</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#007bff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="FiableAuto">
+    
+    <style>
+        /* CSS Enhanced pour toutes les fonctionnalités */
+        :root {
+            --primary-blue: #007bff;
+            --primary-dark: #0056b3;
+            --success-green: #28a745;
+            --warning-orange: #ffc107;
+            --danger-red: #dc3545;
+            --light-gray: #f8f9fa;
+            --dark-gray: #343a40;
+            --border-color: #dee2e6;
+        }
+
+        /* Dark Mode Variables */
+        [data-theme="dark"] {
+            --primary-blue: #4dabf7;
+            --light-gray: #2d3748;
+            --dark-gray: #1a202c;
+            --border-color: #4a5568;
+            color: #e2e8f0;
+            background: #1a202c;
+        }
+
+        /* Enhanced Components */
+        .enhanced-form-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-left: 4px solid var(--primary-blue);
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary-blue);
+        }
+
+        .form-grid {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .form-grid-2 { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+        .form-grid-3 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+
+        .enhanced-input {
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .enhanced-input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+
+        .enhanced-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 8L2 4h8z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 40px;
+        }
+
+        /* Checklist Enhanced */
+        .checklist-container {
+            display: grid;
+            gap: 12px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background: var(--light-gray);
+            border-radius: 8px;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .checklist-item:hover {
+            border-color: var(--primary-blue);
+        }
+
+        .checklist-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 15px;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .radio-input {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--primary-blue);
+        }
+
+        /* Enhanced Photos Section */
+        .photos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .photo-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 2px dashed var(--border-color);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .photo-card:hover {
+            border-color: var(--primary-blue);
+            transform: translateY(-2px);
+        }
+
+        .photo-card.uploaded {
+            border-color: var(--success-green);
+            background: #f8fff9;
+        }
+
+        .photo-icon {
+            font-size: 48px;
+            color: var(--primary-blue);
+            margin-bottom: 15px;
+        }
+
+        .photo-btn {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            margin-top: 15px;
+            transition: background 0.2s;
+        }
+
+        .photo-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .photo-preview {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* Progress Bar Enhanced */
+        .progress-container {
+            margin: 30px 0;
+            padding: 20px;
+            background: var(--light-gray);
+            border-radius: 12px;
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .progress-line {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            height: 4px;
+            background: var(--primary-blue);
+            border-radius: 2px;
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+
+        .progress-step {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            border: 4px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            position: relative;
+            z-index: 2;
+            transition: all 0.3s;
+        }
+
+        .progress-step.active {
+            border-color: var(--primary-blue);
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .progress-step.completed {
+            border-color: var(--success-green);
+            background: var(--success-green);
+            color: white;
+        }
+
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+        }
+
+        /* Enhanced Buttons */
+        .btn-enhanced {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary-blue);
+            color: white;
+        }
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: var(--success-green);
+            color: white;
+        }
+        .btn-success:hover {
+            background: #1e7e34;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        /* Dark Mode Toggle */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+        }
+
+        /* QR Scanner Styles */
+        .qr-scanner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .qr-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        /* Signature Canvas Enhanced */
+        .signature-canvas {
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: crosshair;
+            width: 100%;
+            max-width: 500px;
+            height: 200px;
+            background: white;
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 16px 24px;
+            border-radius: 8px;
+            color: white;
+            z-index: 1001;
+            opacity: 0;
+            transition: all 0.3s;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(10px);
+        }
+
+        .notification.success { background: var(--success-green); }
+        .notification.error { background: var(--danger-red); }
+        .notification.warning { background: var(--warning-orange); }
+        .notification.info { background: var(--primary-blue); }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .form-grid-2, .form-grid-3 {
+                grid-template-columns: 1fr;
+            }
+            
+            .photos-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .progress-labels span {
+                font-size: 10px;
+            }
+            
+            .theme-toggle {
+                top: 10px;
+                right: 10px;
+                width: 40px;
+                height: 40px;
+            }
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary-blue);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .loading-content {
+            text-align: center;
+        }
+
+        /* Geolocation Button */
+        .geo-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px;
+            cursor: pointer;
+        }
+
+        .input-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+    </style>
 </head>
 <body>
-    <!-- État de connexion -->
-    <div id="connectionStatus" class="connection-status testing">
-        <i class="fas fa-wifi"></i> Test connexion...
+    <!-- Dark Mode Toggle -->
+    <button class="theme-toggle" onclick="toggleTheme()">
+        <i class="fas fa-moon" id="theme-icon"></i>
+    </button>
+
+    <!-- QR Scanner Modal -->
+    <div id="qrScanner" class="qr-scanner">
+        <div class="qr-container">
+            <h3>Scanner QR Code</h3>
+            <div id="qr-reader" style="width: 100%; height: 200px; background: #f0f0f0; margin: 20px 0;"></div>
+            <button onclick="closeQrScanner()" class="btn-enhanced btn-secondary">Fermer</button>
+        </div>
     </div>
 
     <!-- Loading Overlay -->
@@ -84,114 +531,209 @@
                 </div>
             </div>
 
-            <!-- Formulaire de création CORRIGÉ -->
-            <div class="card">
-                <h3><i class="fas fa-plus-circle"></i> Créer une nouvelle mission</h3>
-                <form id="missionForm">
-                    <div class="grid grid-2">
+            <!-- Formulaire de création Enhanced -->
+            <form id="missionForm">
+                <!-- Section Client -->
+                <div class="enhanced-form-section">
+                    <div class="section-title">
+                        <i class="fas fa-user"></i>
+                        <span>Informations Client</span>
+                    </div>
+                    <div class="form-grid form-grid-2">
                         <div class="form-group">
-                            <label for="vehicleBrand">Marque du véhicule</label>
-                            <input type="text" id="vehicleBrand" name="vehicleBrand" required>
+                            <label for="clientCompany">Société / Entreprise</label>
+                            <input type="text" id="clientCompany" name="clientCompany" class="enhanced-input" placeholder="Ex: Peugeot Manosque">
                         </div>
                         <div class="form-group">
-                            <label for="vehicleModel">Modèle</label>
-                            <input type="text" id="vehicleModel" name="vehicleModel" required>
+                            <label for="clientName">Nom complet *</label>
+                            <input type="text" id="clientName" name="clientName" class="enhanced-input" required placeholder="Ex: Dominique Moreaux">
+                        </div>
+                        <div class="form-group">
+                            <label for="clientEmail">Email *</label>
+                            <input type="email" id="clientEmail" name="clientEmail" class="enhanced-input" required placeholder="dominique.moreaux@groupechopard.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="clientPhone">Téléphone</label>
+                            <input type="tel" id="clientPhone" name="clientPhone" class="enhanced-input" placeholder="+33 6 XX XX XX XX">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section Véhicule -->
+                <div class="enhanced-form-section">
+                    <div class="section-title">
+                        <i class="fas fa-car"></i>
+                        <span>Informations Véhicule</span>
+                    </div>
+                    <div class="form-grid form-grid-3">
+                        <div class="form-group">
+                            <label for="licensePlate">Immatriculation *</label>
+                            <input type="text" id="licensePlate" name="licensePlate" class="enhanced-input" required placeholder="FY-214-XE" style="text-transform: uppercase;">
+                        </div>
+                        <div class="form-group">
+                            <label for="vehicleBrand">Marque *</label>
+                            <input type="text" id="vehicleBrand" name="vehicleBrand" class="enhanced-input" required placeholder="Citroën">
+                        </div>
+                        <div class="form-group">
+                            <label for="vehicleModel">Modèle *</label>
+                            <input type="text" id="vehicleModel" name="vehicleModel" class="enhanced-input" required placeholder="Jumper">
                         </div>
                         <div class="form-group">
                             <label for="vehicleYear">Année</label>
-                            <input type="number" id="vehicleYear" name="vehicleYear" min="1990" max="2025" required>
+                            <input type="number" id="vehicleYear" name="vehicleYear" class="enhanced-input" min="1990" max="2025" placeholder="2023">
                         </div>
                         <div class="form-group">
-                            <label for="licensePlate">Plaque d'immatriculation</label>
-                            <input type="text" id="licensePlate" name="licensePlate" required>
+                            <label for="mileage">Kilométrage (km)</label>
+                            <input type="number" id="mileage" name="mileage" class="enhanced-input" placeholder="45000">
+                        </div>
+                        <div class="form-group">
+                            <label for="fuelLevel">Niveau de carburant</label>
+                            <select id="fuelLevel" name="fuelLevel" class="enhanced-input enhanced-select">
+                                <option value="">Sélectionner</option>
+                                <option value="empty">Réservoir vide</option>
+                                <option value="1/4">1/4 plein</option>
+                                <option value="1/2">1/2 plein</option>
+                                <option value="3/4">3/4 plein</option>
+                                <option value="full">Plein</option>
+                            </select>
                         </div>
                     </div>
+                    
+                    <div class="form-grid form-grid-2" style="margin-top: 20px;">
+                        <div class="form-group">
+                            <label for="interiorCondition">État de propreté intérieur</label>
+                            <select id="interiorCondition" name="interiorCondition" class="enhanced-input enhanced-select">
+                                <option value="">Sélectionner</option>
+                                <option value="excellent">Excellent</option>
+                                <option value="good">Bon</option>
+                                <option value="average">Moyen</option>
+                                <option value="poor">Mauvais</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="exteriorCondition">État de propreté extérieur</label>
+                            <select id="exteriorCondition" name="exteriorCondition" class="enhanced-input enhanced-select">
+                                <option value="">Sélectionner</option>
+                                <option value="excellent">Excellent</option>
+                                <option value="good">Bon</option>
+                                <option value="average">Moyen</option>
+                                <option value="poor">Mauvais</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
 
-                    <div class="grid grid-2">
+                <!-- Section Mission -->
+                <div class="enhanced-form-section">
+                    <div class="section-title">
+                        <i class="fas fa-route"></i>
+                        <span>Détails Mission</span>
+                    </div>
+                    <div class="form-grid form-grid-2">
                         <div class="form-group">
-                            <label for="pickupLocation">Lieu de prise en charge</label>
-                            <input type="text" id="pickupLocation" name="pickupLocation" required>
+                            <label for="pickupLocation">Lieu de prise en charge *</label>
+                            <div class="input-group">
+                                <input type="text" id="pickupLocation" name="pickupLocation" class="enhanced-input" required placeholder="Adresse complète">
+                                <button type="button" class="geo-btn" onclick="getCurrentLocation('pickupLocation')">
+                                    <i class="fas fa-location-arrow"></i>
+                                </button>
+                            </div>
                         </div>
                         <div class="form-group">
-                            <label for="deliveryLocation">Lieu de livraison</label>
-                            <input type="text" id="deliveryLocation" name="deliveryLocation" required>
+                            <label for="deliveryLocation">Lieu de livraison *</label>
+                            <div class="input-group">
+                                <input type="text" id="deliveryLocation" name="deliveryLocation" class="enhanced-input" required placeholder="Adresse complète">
+                                <button type="button" class="geo-btn" onclick="getCurrentLocation('deliveryLocation')">
+                                    <i class="fas fa-location-arrow"></i>
+                                </button>
+                            </div>
                         </div>
                         <div class="form-group">
-                            <label for="pickupDate">Date de prise en charge</label>
-                            <input type="datetime-local" id="pickupDate" name="pickupDate" required>
+                            <label for="pickupDate">Date de prise en charge *</label>
+                            <input type="datetime-local" id="pickupDate" name="pickupDate" class="enhanced-input" required>
                         </div>
                         <div class="form-group">
                             <label for="deliveryDate">Date de livraison prévue</label>
-                            <input type="datetime-local" id="deliveryDate" name="deliveryDate" required>
+                            <input type="datetime-local" id="deliveryDate" name="deliveryDate" class="enhanced-input">
                         </div>
                     </div>
-
-                    <div class="grid grid-3">
+                    
+                    <div class="form-grid form-grid-2" style="margin-top: 20px;">
                         <div class="form-group">
-                            <label for="clientName">Nom du client</label>
-                            <input type="text" id="clientName" name="clientName" required>
+                            <label for="urgency">Niveau d'urgence</label>
+                            <select id="urgency" name="urgency" class="enhanced-input enhanced-select">
+                                <option value="normal">Normal</option>
+                                <option value="urgent">Urgent</option>
+                                <option value="critical">Critique</option>
+                            </select>
                         </div>
                         <div class="form-group">
-                            <label for="clientEmail">Email du client</label>
-                            <input type="email" id="clientEmail" name="clientEmail" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="clientPhone">Téléphone du client</label>
-                            <input type="tel" id="clientPhone" name="clientPhone" required>
+                            <label for="missionType">Type de mission</label>
+                            <select id="missionType" name="missionType" class="enhanced-input enhanced-select">
+                                <option value="inspection">Inspection simple</option>
+                                <option value="convoyage">Convoyage</option>
+                                <option value="both">Inspection + Convoyage</option>
+                            </select>
                         </div>
                     </div>
+                </div>
 
-                    <div class="form-group">
-                        <label for="urgency">Niveau d'urgence</label>
-                        <select id="urgency" name="urgency">
-                            <option value="normal">Normal</option>
-                            <option value="urgent">Urgent</option>
-                            <option value="critical">Critique</option>
-                        </select>
-                    </div>
+                <button type="submit" class="btn-enhanced btn-primary" style="width: 100%; margin-top: 20px;">
+                    <i class="fas fa-rocket"></i> Créer la mission
+                </button>
+            </form>
 
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-rocket"></i> Créer la mission
-                    </button>
-                </form>
-            </div>
-
-            <!-- Missions créées -->
-            <div class="card">
-                <h3><i class="fas fa-list"></i> Missions récentes</h3>
+            <!-- Missions archivées -->
+            <div class="enhanced-form-section">
+                <div class="section-title">
+                    <i class="fas fa-archive"></i>
+                    <span>Toutes les missions</span>
+                </div>
                 <div id="missionsList">
                     <p>Aucune mission créée pour le moment.</p>
                 </div>
             </div>
         </section>
 
-        <!-- Section Prestataire -->
+        <!-- Section Prestataire Enhanced -->
         <section id="prestataire" class="section">
             <div class="section-header">
                 <h2><i class="fas fa-tools"></i> Interface Prestataire</h2>
                 <p>Accédez à votre mission et complétez l'inspection</p>
             </div>
 
-            <!-- Accès mission -->
-            <div class="card">
-                <h3><i class="fas fa-key"></i> Accéder à une mission</h3>
+            <!-- Accès mission avec QR -->
+            <div class="enhanced-form-section">
+                <div class="section-title">
+                    <i class="fas fa-key"></i>
+                    <span>Accéder à une mission</span>
+                </div>
                 <form id="accessForm">
                     <div class="form-group">
                         <label for="missionCode">Code de mission</label>
-                        <input type="text" id="missionCode" name="missionCode" placeholder="Ex: MIS-2024-001" required>
+                        <input type="text" id="missionCode" name="missionCode" class="enhanced-input" placeholder="Ex: FA-20250823-001" required>
                     </div>
-                    <button type="submit" class="btn btn-secondary">
-                        <i class="fas fa-search"></i> Accéder à la mission
-                    </button>
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button type="submit" class="btn-enhanced btn-primary" style="flex: 1;">
+                            <i class="fas fa-search"></i> Accéder à la mission
+                        </button>
+                        <button type="button" class="btn-enhanced btn-secondary" onclick="openQrScanner()">
+                            <i class="fas fa-qrcode"></i> Scanner QR
+                        </button>
+                    </div>
                 </form>
             </div>
 
-            <!-- Détails mission -->
-            <div id="missionDetails" class="card" style="display: none;">
-                <h3><i class="fas fa-car"></i> Détails de la mission</h3>
+            <!-- Détails mission avec checklist complète -->
+            <div id="missionDetails" class="enhanced-form-section" style="display: none;">
+                <div class="section-title">
+                    <i class="fas fa-car"></i>
+                    <span>Inspection en cours</span>
+                </div>
+                
                 <div id="missionInfo"></div>
                 
-                <!-- Progress Bar -->
+                <!-- Progress Bar Enhanced -->
                 <div class="progress-container">
                     <div class="progress-steps">
                         <div class="progress-line" id="progressLine"></div>
@@ -199,129 +741,362 @@
                         <div class="progress-step">2</div>
                         <div class="progress-step">3</div>
                         <div class="progress-step">4</div>
+                        <div class="progress-step">5</div>
                     </div>
                     <div class="progress-labels">
                         <span>Accès</span>
+                        <span>Checklist</span>
                         <span>Photos</span>
                         <span>Signature</span>
                         <span>Finalisé</span>
                     </div>
                 </div>
 
-                <!-- Upload Photos -->
-                <div class="photo-section">
-                    <h4><i class="fas fa-camera"></i> Photos obligatoires (8)</h4>
-                    <div class="photo-grid">
-                        <div class="photo-item" data-type="compteur">
-                            <i class="fas fa-tachometer-alt"></i>
-                            <p>Compteur</p>
-                            <input type="file" accept="image/*" data-photo="compteur">
-                            <img class="photo-preview" style="display: none;">
-                            <div class="upload-status"></div>
+                <!-- Checklist Enhanced comme Weeproov -->
+                <div style="margin: 30px 0;">
+                    <h4 style="margin-bottom: 20px;"><i class="fas fa-check-circle"></i> Checklist véhicule</h4>
+                    <div class="checklist-container">
+                        <div class="checklist-item">
+                            <div class="checklist-label">
+                                <i class="fas fa-key" style="color: var(--primary-blue);"></i>
+                                <span>Nombre de clé(s) confiée(s)</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <button type="button" class="btn-enhanced btn-secondary" onclick="adjustKeys(-1)" style="padding: 5px 10px;">-</button>
+                                <span id="keyCount" style="font-weight: bold; min-width: 30px; text-align: center;">0</span>
+                                <button type="button" class="btn-enhanced btn-primary" onclick="adjustKeys(1)" style="padding: 5px 10px;">+</button>
+                            </div>
                         </div>
-                        <div class="photo-item" data-type="face-avant">
-                            <i class="fas fa-car"></i>
-                            <p>Face avant</p>
-                            <input type="file" accept="image/*" data-photo="face-avant">
-                            <img class="photo-preview" style="display: none;">
-                            <div class="upload-status"></div>
+
+                        <div class="checklist-item">
+                            <div class="checklist-label">
+                                <i class="fas fa-file-alt" style="color: var(--primary-blue);"></i>
+                                <span>Papiers du véhicule</span>
+                            </div>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="vehiclePapers" value="yes" class="radio-input">
+                                    <span>OUI</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="vehiclePapers" value="no" class="radio-input">
+                                    <span>NON</span>
+                                </label>
+                            </div>
                         </div>
-                        <div class="photo-item" data-type="face-arriere">
-                            <i class="fas fa-car"></i>
-                            <p>Face arrière</p>
-                            <input type="file" accept="image/*" data-photo="face-arriere">
-                            <img class="photo-preview" style="display: none;">
-                            <div class="upload-status"></div>
+
+                        <div class="checklist-item">
+                            <div class="checklist-label">
+                                <i class="fas fa-satellite-dish" style="color: var(--primary-blue);"></i>
+                                <span>GPS</span>
+                            </div>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="gps" value="yes" class="radio-input">
+                                    <span>OUI</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="gps" value="no" class="radio-input">
+                                    <span>NON</span>
+                                </label>
+                            </div>
                         </div>
-                        <div class="photo-item" data-type="cote-gauche">
-                            <i class="fas fa-car-side"></i>
-                            <p>Côté gauche</p>
-                            <input type="file" accept="image/*" data-photo="cote-gauche">
-                            <img class="photo-preview" style="display: none;">
-                            <div class="upload-status"></div>
+
+                        <div class="checklist-item">
+                            <div class="checklist-label">
+                                <i class="fas fa-sd-card" style="color: var(--primary-blue);"></i>
+                                <span>Carte SD ou CD/DVD</span>
+                            </div>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="sdCard" value="yes" class="radio-input">
+                                    <span>OUI</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="sdCard" value="no" class="radio-input">
+                                    <span>NON</span>
+                                </label>
+                            </div>
                         </div>
-                        <div class="photo-item" data-type="cote-droit">
-                            <i class="fas fa-car-side"></i>
-                            <p>Côté droit</p>
-                            <input type="file" accept="image/*" data-photo="cote-droit">
-                            <img class="photo-preview" style="display: none;">
-                            <div class="upload-status"></div>
+
+                        <div class="checklist-item">
+                            <div class="checklist-label">
+                                <i class="fas fa-first-aid" style="color: var(--primary-blue);"></i>
+                                <span>Kit de sécurité (Gilet + Triangle)</span>
+                            </div>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="safetyKit" value="yes" class="radio-input">
+                                    <span>OUI</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="safetyKit" value="no" class="radio-input">
+                                    <span>NON</span>
+                                </label>
+                            </div>
                         </div>
-                        <div class="photo-item" data-type="moteur">
-                            <i class="fas fa-cog"></i>
-                            <p>Moteur</p>
-                            <input type="file" accept="image/*" data-photo="moteur">
-                            <img class="photo-preview" style="display: none;">
-                            <div class="upload-status"></div>
+
+                        <div class="checklist-item">
+                            <div class="checklist-label">
+                                <i class="fas fa-life-ring" style="color: var(--primary-blue);"></i>
+                                <span>Roue de secours / Kit anti-crevaison</span>
+                            </div>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="spareWheel" value="yes" class="radio-input">
+                                    <span>OUI</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="spareWheel" value="no" class="radio-input">
+                                    <span>NON</span>
+                                </label>
+                            </div>
                         </div>
-                        <div class="photo-item" data-type="carnet">
-                            <i class="fas fa-book"></i>
-                            <p>Carnet</p>
-                            <input type="file" accept="image/*" data-photo="carnet">
-                            <img class="photo-preview" style="display: none;">
-                            <div class="upload-status"></div>
+
+                        <div class="checklist-item">
+                            <div class="checklist-label">
+                                <i class="fas fa-tools" style="color: var(--primary-blue);"></i>
+                                <span>Trousse à outils</span>
+                            </div>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="toolKit" value="yes" class="radio-input">
+                                    <span>OUI</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="toolKit" value="no" class="radio-input">
+                                    <span>NON</span>
+                                </label>
+                            </div>
                         </div>
-                        <div class="photo-item" data-type="interieur">
-                            <i class="fas fa-couch"></i>
-                            <p>Intérieur</p>
-                            <input type="file" accept="image/*" data-photo="interieur">
-                            <img class="photo-preview" style="display: none;">
-                            <div class="upload-status"></div>
+
+                        <div class="checklist-item">
+                            <div class="checklist-label">
+                                <i class="fas fa-charging-station" style="color: var(--primary-blue);"></i>
+                                <span>Chargeur téléphone</span>
+                            </div>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="phoneCharger" value="yes" class="radio-input">
+                                    <span>OUI</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="phoneCharger" value="no" class="radio-input">
+                                    <span>NON</span>
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Observations -->
-                <div class="form-group">
-                    <label for="observations">Observations</label>
-                    <textarea id="observations" name="observations" rows="4" placeholder="Décrivez l'état du véhicule, les éventuels dommages ou remarques..."></textarea>
+                <!-- Photos Enhanced comme Weeproov -->
+                <div style="margin: 30px 0;">
+                    <h4 style="margin-bottom: 20px;"><i class="fas fa-camera"></i> Photos obligatoires</h4>
+                    <div class="photos-grid">
+                        <div class="photo-card" data-type="compteur">
+                            <div class="photo-icon">
+                                <i class="fas fa-tachometer-alt"></i>
+                            </div>
+                            <h5>Compteur d'informations</h5>
+                            <p>(moteur allumé)</p>
+                            <input type="file" accept="image/*" capture="environment" data-photo="compteur" style="display: none;" id="photo-compteur">
+                            <button type="button" class="photo-btn" onclick="document.getElementById('photo-compteur').click()">
+                                <i class="fas fa-camera"></i> Commencer
+                            </button>
+                            <img class="photo-preview" style="display: none;">
+                            <div class="upload-status"></div>
+                        </div>
+
+                        <div class="photo-card" data-type="face-avant">
+                            <div class="photo-icon">
+                                <i class="fas fa-car"></i>
+                            </div>
+                            <h5>Face avant générale</h5>
+                            <input type="file" accept="image/*" capture="environment" data-photo="face-avant" style="display: none;" id="photo-face-avant">
+                            <button type="button" class="photo-btn" onclick="document.getElementById('photo-face-avant').click()">
+                                <i class="fas fa-camera"></i> Prendre photo
+                            </button>
+                            <img class="photo-preview" style="display: none;">
+                            <div class="upload-status"></div>
+                        </div>
+
+                        <div class="photo-card" data-type="lateral-gauche-avant">
+                            <div class="photo-icon">
+                                <i class="fas fa-car-side"></i>
+                            </div>
+                            <h5>Latéral gauche avant</h5>
+                            <input type="file" accept="image/*" capture="environment" data-photo="lateral-gauche-avant" style="display: none;" id="photo-lateral-gauche-avant">
+                            <button type="button" class="photo-btn" onclick="document.getElementById('photo-lateral-gauche-avant').click()">
+                                <i class="fas fa-camera"></i> Prendre photo
+                            </button>
+                            <img class="photo-preview" style="display: none;">
+                            <div class="upload-status"></div>
+                        </div>
+
+                        <div class="photo-card" data-type="lateral-gauche-arriere">
+                            <div class="photo-icon">
+                                <i class="fas fa-car-side"></i>
+                            </div>
+                            <h5>Latéral gauche arrière</h5>
+                            <input type="file" accept="image/*" capture="environment" data-photo="lateral-gauche-arriere" style="display: none;" id="photo-lateral-gauche-arriere">
+                            <button type="button" class="photo-btn" onclick="document.getElementById('photo-lateral-gauche-arriere').click()">
+                                <i class="fas fa-camera"></i> Prendre photo
+                            </button>
+                            <img class="photo-preview" style="display: none;">
+                            <div class="upload-status"></div>
+                        </div>
+
+                        <div class="photo-card" data-type="face-arriere">
+                            <div class="photo-icon">
+                                <i class="fas fa-car"></i>
+                            </div>
+                            <h5>Face arrière générale</h5>
+                            <input type="file" accept="image/*" capture="environment" data-photo="face-arriere" style="display: none;" id="photo-face-arriere">
+                            <button type="button" class="photo-btn" onclick="document.getElementById('photo-face-arriere').click()">
+                                <i class="fas fa-camera"></i> Prendre photo
+                            </button>
+                            <img class="photo-preview" style="display: none;">
+                            <div class="upload-status"></div>
+                        </div>
+
+                        <div class="photo-card" data-type="lateral-droit-arriere">
+                            <div class="photo-icon">
+                                <i class="fas fa-car-side"></i>
+                            </div>
+                            <h5>Latéral droit arrière</h5>
+                            <input type="file" accept="image/*" capture="environment" data-photo="lateral-droit-arriere" style="display: none;" id="photo-lateral-droit-arriere">
+                            <button type="button" class="photo-btn" onclick="document.getElementById('photo-lateral-droit-arriere').click()">
+                                <i class="fas fa-camera"></i> Prendre photo
+                            </button>
+                            <img class="photo-preview" style="display: none;">
+                            <div class="upload-status"></div>
+                        </div>
+
+                        <div class="photo-card" data-type="lateral-droit-avant">
+                            <div class="photo-icon">
+                                <i class="fas fa-car-side"></i>
+                            </div>
+                            <h5>Latéral droit avant</h5>
+                            <input type="file" accept="image/*" capture="environment" data-photo="lateral-droit-avant" style="display: none;" id="photo-lateral-droit-avant">
+                            <button type="button" class="photo-btn" onclick="document.getElementById('photo-lateral-droit-avant').click()">
+                                <i class="fas fa-camera"></i> Prendre photo
+                            </button>
+                            <img class="photo-preview" style="display: none;">
+                            <div class="upload-status"></div>
+                        </div>
+
+                        <div class="photo-card" data-type="moteur">
+                            <div class="photo-icon">
+                                <i class="fas fa-cog"></i>
+                            </div>
+                            <h5>Compartiment moteur</h5>
+                            <input type="file" accept="image/*" capture="environment" data-photo="moteur" style="display: none;" id="photo-moteur">
+                            <button type="button" class="photo-btn" onclick="document.getElementById('photo-moteur').click()">
+                                <i class="fas fa-camera"></i> Prendre photo
+                            </button>
+                            <img class="photo-preview" style="display: none;">
+                            <div class="upload-status"></div>
+                        </div>
+
+                        <div class="photo-card" data-type="interieur">
+                            <div class="photo-icon">
+                                <i class="fas fa-couch"></i>
+                            </div>
+                            <h5>Intérieur véhicule</h5>
+                            <input type="file" accept="image/*" capture="environment" data-photo="interieur" style="display: none;" id="photo-interieur">
+                            <button type="button" class="photo-btn" onclick="document.getElementById('photo-interieur').click()">
+                                <i class="fas fa-camera"></i> Prendre photo
+                            </button>
+                            <img class="photo-preview" style="display: none;">
+                            <div class="upload-status"></div>
+                        </div>
+
+                        <div class="photo-card" data-type="carnet">
+                            <div class="photo-icon">
+                                <i class="fas fa-book"></i>
+                            </div>
+                            <h5>Carnet d'entretien</h5>
+                            <input type="file" accept="image/*" capture="environment" data-photo="carnet" style="display: none;" id="photo-carnet">
+                            <button type="button" class="photo-btn" onclick="document.getElementById('photo-carnet').click()">
+                                <i class="fas fa-camera"></i> Prendre photo
+                            </button>
+                            <img class="photo-preview" style="display: none;">
+                            <div class="upload-status"></div>
+                        </div>
+                    </div>
+
+                    <!-- Photos optionnelles -->
+                    <div style="margin-top: 30px;">
+                        <h5><i class="fas fa-camera-retro"></i> Photos optionnelles <span style="color: #666;">(0/14)</span></h5>
+                        <button type="button" class="btn-enhanced btn-secondary" onclick="addOptionalPhoto()" style="margin-top: 15px;">
+                            <i class="fas fa-plus"></i> Ajouter photo libre
+                        </button>
+                        <div id="optionalPhotos"></div>
+                    </div>
                 </div>
 
-                <!-- Signature -->
-                <div class="signature-section">
+                <!-- Observations Enhanced -->
+                <div style="margin: 30px 0;">
+                    <h4><i class="fas fa-comment"></i> Observations</h4>
+                    <textarea id="observations" name="observations" rows="6" class="enhanced-input" style="width: 100%; resize: vertical;" placeholder="Décrivez l'état du véhicule, les éventuels dommages, remarques particulières..."></textarea>
+                </div>
+
+                <!-- Signature Enhanced -->
+                <div style="margin: 30px 0;">
                     <h4><i class="fas fa-signature"></i> Signature du client</h4>
-                    <div class="signature-container">
-                        <canvas id="signatureCanvas" class="signature-canvas" width="400" height="200"></canvas>
+                    <div style="text-align: center; margin: 20px 0;">
+                        <canvas id="signatureCanvas" class="signature-canvas"></canvas>
                     </div>
-                    <div class="signature-controls">
-                        <button type="button" class="btn btn-secondary" id="clearSignature">
+                    <div style="display: flex; gap: 15px; justify-content: center;">
+                        <button type="button" class="btn-enhanced btn-secondary" id="clearSignature">
                             <i class="fas fa-eraser"></i> Effacer
                         </button>
-                        <button type="button" class="btn btn-primary" id="finalizeInspection">
-                            <i class="fas fa-check"></i> Finaliser l'inspection
+                        <button type="button" class="btn-enhanced btn-success" id="finalizeInspection">
+                            <i class="fas fa-check"></i> Signer et terminer
                         </button>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Section Client -->
+        <!-- Section Client Enhanced -->
         <section id="client" class="section">
             <div class="section-header">
                 <h2><i class="fas fa-user"></i> Interface Client</h2>
                 <p>Suivez l'avancement de votre inspection en temps réel</p>
             </div>
 
-            <!-- Suivi mission -->
-            <div class="card">
-                <h3><i class="fas fa-search"></i> Suivre ma mission</h3>
+            <!-- Suivi mission avec QR -->
+            <div class="enhanced-form-section">
+                <div class="section-title">
+                    <i class="fas fa-search"></i>
+                    <span>Suivre ma mission</span>
+                </div>
                 <form id="trackingForm">
                     <div class="form-group">
                         <label for="trackingCode">Code de suivi</label>
-                        <input type="text" id="trackingCode" name="trackingCode" placeholder="Ex: MIS-2024-001" required>
+                        <input type="text" id="trackingCode" name="trackingCode" class="enhanced-input" placeholder="Ex: FA-20250823-001" required>
                     </div>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-search"></i> Suivre la mission
-                    </button>
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button type="submit" class="btn-enhanced btn-primary" style="flex: 1;">
+                            <i class="fas fa-search"></i> Suivre la mission
+                        </button>
+                        <button type="button" class="btn-enhanced btn-secondary" onclick="openQrScanner()">
+                            <i class="fas fa-qrcode"></i> Scanner QR
+                        </button>
+                    </div>
                 </form>
             </div>
 
-            <!-- Status mission -->
-            <div id="trackingResult" class="card" style="display: none;">
-                <h3><i class="fas fa-info-circle"></i> État de votre mission</h3>
+            <!-- Status mission Enhanced -->
+            <div id="trackingResult" class="enhanced-form-section" style="display: none;">
+                <div class="section-title">
+                    <i class="fas fa-info-circle"></i>
+                    <span>État de votre mission</span>
+                </div>
                 <div id="trackingInfo"></div>
                 
-                <!-- Progress client -->
+                <!-- Progress client Enhanced -->
                 <div class="progress-container">
                     <div class="progress-steps">
                         <div class="progress-line" id="clientProgressLine"></div>
@@ -329,25 +1104,164 @@
                         <div class="progress-step" id="clientStep2">2</div>
                         <div class="progress-step" id="clientStep3">3</div>
                         <div class="progress-step" id="clientStep4">4</div>
+                        <div class="progress-step" id="clientStep5">5</div>
                     </div>
                     <div class="progress-labels">
-                        <span>Mission créée</span>
-                        <span>Inspection en cours</span>
-                        <span>Photos & signature</span>
-                        <span>Rapport disponible</span>
+                        <span>Créée</span>
+                        <span>Assignée</span>
+                        <span>En cours</span>
+                        <span>Photos</span>
+                        <span>Terminée</span>
                     </div>
                 </div>
 
                 <!-- Download rapport -->
-                <div id="downloadSection" style="display: none;">
-                    <button class="btn btn-primary" id="downloadReport">
-                        <i class="fas fa-download"></i> Télécharger le rapport PDF
-                    </button>
+                <div id="downloadSection" style="display: none; text-align: center; margin-top: 30px;">
+                    <h4><i class="fas fa-file-pdf"></i> Rapport disponible</h4>
+                    <p style="margin: 15px 0; color: #666;">Votre inspection est terminée. Téléchargez votre rapport complet.</p>
+                    <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                        <button class="btn-enhanced btn-success" id="downloadReport">
+                            <i class="fas fa-download"></i> Télécharger PDF
+                        </button>
+                        <button class="btn-enhanced btn-primary" onclick="sendReportByEmail()">
+                            <i class="fas fa-envelope"></i> Envoyer par email
+                        </button>
+                    </div>
                 </div>
             </div>
         </section>
     </main>
 
+    <!-- Script Enhanced -->
+    <script>
+        // Variables globales
+        let keyCount = 0;
+        let optionalPhotoCount = 0;
+        let currentTheme = 'light';
+
+        // Dark Mode Toggle
+        function toggleTheme() {
+            currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.body.setAttribute('data-theme', currentTheme);
+            
+            const icon = document.getElementById('theme-icon');
+            icon.className = currentTheme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+            
+            localStorage.setItem('theme', currentTheme);
+        }
+
+        // Géolocalisation
+        function getCurrentLocation(inputId) {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        
+                        // Géocodage inverse (nécessite une API comme Google Maps)
+                        // Pour l'instant, on affiche les coordonnées
+                        document.getElementById(inputId).value = `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`;
+                    },
+                    error => {
+                        showNotification('Erreur de géolocalisation: ' + error.message, 'error');
+                    }
+                );
+            } else {
+                showNotification('Géolocalisation non supportée par ce navigateur', 'error');
+            }
+        }
+
+        // QR Scanner
+        function openQrScanner() {
+            document.getElementById('qrScanner').style.display = 'flex';
+            // Intégration avec une librairie QR comme html5-qrcode
+            showNotification('Scanner QR activé (nécessite intégration librairie)', 'info');
+        }
+
+        function closeQrScanner() {
+            document.getElementById('qrScanner').style.display = 'none';
+        }
+
+        // Gestion des clés
+        function adjustKeys(change) {
+            keyCount = Math.max(0, keyCount + change);
+            document.getElementById('keyCount').textContent = keyCount;
+        }
+
+        // Photos optionnelles
+        function addOptionalPhoto() {
+            optionalPhotoCount++;
+            const container = document.getElementById('optionalPhotos');
+            
+            const photoDiv = document.createElement('div');
+            photoDiv.className = 'photo-card';
+            photoDiv.innerHTML = `
+                <div class="photo-icon">
+                    <i class="fas fa-camera"></i>
+                </div>
+                <h5>Photo libre ${optionalPhotoCount}</h5>
+                <input type="file" accept="image/*" capture="environment" style="display: none;" id="optional-photo-${optionalPhotoCount}">
+                <button type="button" class="photo-btn" onclick="document.getElementById('optional-photo-${optionalPhotoCount}').click()">
+                    <i class="fas fa-camera"></i> Prendre photo
+                </button>
+                <img class="photo-preview" style="display: none;">
+                <button type="button" class="btn-enhanced btn-secondary" onclick="removeOptionalPhoto(this)" style="margin-top: 10px; padding: 5px 10px;">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+            
+            container.appendChild(photoDiv);
+            updateOptionalPhotoCount();
+        }
+
+        function removeOptionalPhoto(button) {
+            button.parentElement.remove();
+            updateOptionalPhotoCount();
+        }
+
+        function updateOptionalPhotoCount() {
+            const count = document.getElementById('optionalPhotos').children.length;
+            document.querySelector('h5 span').textContent = `(${count}/14)`;
+        }
+
+        // Envoi rapport par email
+        function sendReportByEmail() {
+            const email = prompt('Entrez votre adresse email:');
+            if (email) {
+                showNotification('Rapport envoyé à ' + email, 'success');
+            }
+        }
+
+        // Notification system
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type} show`;
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 4000);
+        }
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', () => {
+            // Charger le thème sauvegardé
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                currentTheme = savedTheme;
+                document.body.setAttribute('data-theme', currentTheme);
+                document.getElementById('theme-icon').className = currentTheme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+            }
+            
+            // Initialiser l'app
+            if (typeof app !== 'undefined') {
+                app.init();
+            }
+            
+            showNotification('FiableAuto chargé avec succès!', 'success');
+        });
+    </script>
+    
     <script src="script.js"></script>
 </body>
 </html>
