@@ -36,6 +36,10 @@ class FiableAutoApp {
             'compteur-final', 'etat-final', 'remise-cles'
         ];
 
+        // Liste de toutes les missions pour filtrage
+        this.allMissions = [];
+        this.currentFilter = 'all'; // 'all', 'pending', 'in_progress', 'completed'
+
         this.init();
     }
 
@@ -48,6 +52,7 @@ class FiableAutoApp {
         this.setupArrivalFinalization();
         this.setupSignature();
         this.setupCompletionScreen();
+        this.setupStatsButtons(); // NOUVEAU : Boutons stats cliquables
 
         this.checkApiConnection();
         this.loadStats();
@@ -65,12 +70,6 @@ class FiableAutoApp {
             pill.addEventListener('click', () => {
                 const target = pill.dataset.section;
                 
-                // Sécurité : empêcher accès non autorisé
-                if (!this.canAccessSection(target)) {
-                    this.showNotification('Accès non autorisé à cette section', 'warning');
-                    return;
-                }
-
                 navPills.forEach(p => p.classList.remove('active'));
                 pill.classList.add('active');
                 sections.forEach(s => s.classList.remove('active'));
@@ -83,12 +82,6 @@ class FiableAutoApp {
         });
     }
 
-    canAccessSection(section) {
-        // Pour l'instant, tous les accès sont autorisés
-        // À adapter selon tes besoins de sécurité
-        return true;
-    }
-
     resetSectionState() {
         if (this.currentSection === 'prestataire') {
             // Reset du formulaire d'accès
@@ -98,6 +91,9 @@ class FiableAutoApp {
             // Masquer les détails de mission si on revient à l'accueil prestataire
             const missionDetails = document.getElementById('missionDetails');
             if (missionDetails) missionDetails.style.display = 'none';
+            
+            // Reset des données de mission
+            this.resetMissionData();
         }
 
         if (this.currentSection === 'client') {
@@ -109,6 +105,72 @@ class FiableAutoApp {
             const trackingResult = document.getElementById('trackingResult');
             if (trackingResult) trackingResult.style.display = 'none';
         }
+    }
+
+    resetMissionData() {
+        this.currentMission = null;
+        this.departureValidated = false;
+        this.currentPhase = 'departure';
+        this.uploadedPhotos = { departure: {}, arrival: {} };
+        this.previewsDataURL = { departure: {}, arrival: {} };
+        this.signatureData = null;
+        this.checklistData = {};
+    }
+
+    // ========== STATS BUTTONS (NOUVEAU) ==========
+    setupStatsButtons() {
+        // Rendre les boutons stats cliquables
+        const statsButtons = [
+            { id: 'totalMissions', filter: 'all' },
+            { id: 'pendingMissions', filter: 'pending' },
+            { id: 'progressMissions', filter: 'in_progress' },
+            { id: 'completedMissions', filter: 'completed' }
+        ];
+
+        statsButtons.forEach(({ id, filter }) => {
+            const element = document.getElementById(id);
+            if (element && element.parentElement) {
+                const card = element.parentElement;
+                card.style.cursor = 'pointer';
+                card.classList.add('stats-clickable');
+                
+                card.addEventListener('click', () => {
+                    this.filterMissions(filter);
+                    this.highlightActiveFilter(card);
+                });
+            }
+        });
+    }
+
+    filterMissions(filter) {
+        this.currentFilter = filter;
+        let filteredMissions = [...this.allMissions];
+
+        if (filter !== 'all') {
+            filteredMissions = this.allMissions.filter(mission => mission.status === filter);
+        }
+
+        this.displayMissionsList(filteredMissions);
+        
+        // Message de feedback
+        const filterText = {
+            'all': 'toutes les missions',
+            'pending': 'les missions en attente',
+            'in_progress': 'les missions en cours',
+            'completed': 'les missions terminées'
+        };
+        
+        this.showNotification(`Affichage de ${filterText[filter]} (${filteredMissions.length} résultat${filteredMissions.length > 1 ? 's' : ''})`, 'info');
+    }
+
+    highlightActiveFilter(activeCard) {
+        // Retirer la classe active de toutes les cards stats
+        document.querySelectorAll('.stat-card').forEach(card => {
+            card.classList.remove('active-filter');
+        });
+        
+        // Ajouter la classe active à la card cliquée
+        activeCard.classList.add('active-filter');
     }
 
     // ========== FORMS ==========
@@ -318,17 +380,25 @@ class FiableAutoApp {
         });
     }
 
-    // ========== PHOTOS ==========
+    // ========== PHOTOS (CORRIGÉ MOBILE) ==========
     setupPhotoUpload() {
         // Photos de départ
         const departureInputs = document.querySelectorAll('#departurePhotos input[type="file"]');
         departureInputs.forEach(input => {
+            // CORRECTION MOBILE : Ajouter les attributs nécessaires
+            input.setAttribute('accept', 'image/*');
+            input.setAttribute('capture', 'environment'); // Utilise la caméra arrière par défaut
+            
             input.addEventListener('change', (e) => this.handlePhotoUpload(e, 'departure'));
         });
 
         // Photos d'arrivée
         const arrivalInputs = document.querySelectorAll('#arrivalPhotos input[type="file"]');
         arrivalInputs.forEach(input => {
+            // CORRECTION MOBILE : Ajouter les attributs nécessaires
+            input.setAttribute('accept', 'image/*');
+            input.setAttribute('capture', 'environment');
+            
             input.addEventListener('change', (e) => this.handlePhotoUpload(e, 'arrival'));
         });
     }
@@ -338,7 +408,10 @@ class FiableAutoApp {
         if (!file) return;
 
         const photoType = event.target.dataset.photo;
-        if (!photoType) return;
+        if (!photoType) {
+            this.showNotification('Erreur : type de photo non défini', 'error');
+            return;
+        }
 
         // Vérifier si on peut modifier les photos de départ
         if (phase === 'departure' && this.departureValidated) {
@@ -349,14 +422,25 @@ class FiableAutoApp {
 
         const card = event.target.closest('.photo-card');
         const preview = card.querySelector('.photo-preview');
+        const uploadStatus = card.querySelector('.upload-status');
 
         try {
             this.showLoading(true);
 
-            // Compression de l'image
-            const compressedFile = await this.compressImage(file);
+            // Validation du fichier
+            if (!file.type.startsWith('image/')) {
+                throw new Error('Le fichier doit être une image');
+            }
 
-            // Prévisualisation
+            // Taille max 10MB
+            if (file.size > 10 * 1024 * 1024) {
+                throw new Error('L\'image est trop volumineuse (max 10MB)');
+            }
+
+            // Compression de l'image (AMÉLIORÉE POUR MOBILE)
+            const compressedFile = await this.compressImageForMobile(file);
+
+            // Prévisualisation locale
             const reader = new FileReader();
             reader.onload = (e) => {
                 if (preview) {
@@ -367,14 +451,22 @@ class FiableAutoApp {
             };
             reader.readAsDataURL(compressedFile);
 
-            // Upload vers le serveur
+            // Upload vers le serveur (CORRIGÉ)
             if (this.currentMission) {
-                await this.uploadPhoto(this.currentMission.id, `${phase}:${photoType}`, compressedFile);
+                const photoTypeWithPhase = `${phase}:${photoType}`; // Format attendu par l'API
+                await this.uploadPhotoToServer(this.currentMission.id, photoTypeWithPhase, compressedFile);
+                
+                // Marquer comme uploadée
+                this.uploadedPhotos[phase][photoType] = true;
                 card.classList.add('uploaded');
+                
+                if (uploadStatus) {
+                    uploadStatus.innerHTML = '<i class="fas fa-check" style="color: var(--success-green);"></i>';
+                }
+            } else {
+                // Mode hors ligne - stockage local
+                this.uploadedPhotos[phase][photoType] = compressedFile;
             }
-
-            // Marquer comme uploadée
-            this.uploadedPhotos[phase][photoType] = true;
 
             // Mettre à jour les boutons de validation/finalisation
             if (phase === 'departure') {
@@ -383,47 +475,88 @@ class FiableAutoApp {
                 this.updateFinalizationButton();
             }
 
-            this.showNotification(`Photo ${photoType} uploadée avec succès`, 'success');
+            this.showNotification(`📸 Photo ${photoType} uploadée avec succès`, 'success');
 
         } catch (error) {
             console.error('Erreur upload photo:', error);
-            this.showNotification('Erreur lors de l\'upload de la photo', 'error');
+            this.showNotification(`Erreur upload photo: ${error.message}`, 'error');
+            
+            if (uploadStatus) {
+                uploadStatus.innerHTML = '<i class="fas fa-times" style="color: var(--danger-red);"></i>';
+            }
+            
+            // Reset l'input en cas d'erreur
+            event.target.value = '';
         } finally {
             this.showLoading(false);
         }
     }
 
-    async compressImage(file, maxWidth = 1200, quality = 0.8) {
-        return new Promise((resolve) => {
+    // NOUVELLE FONCTION : Compression optimisée pour mobile
+    async compressImageForMobile(file, maxWidth = 1200, maxHeight = 1200, quality = 0.8) {
+        return new Promise((resolve, reject) => {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             const img = new Image();
             
             img.onload = () => {
-                const ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
-                canvas.width = Math.max(1, Math.round(img.width * ratio));
-                canvas.height = Math.max(1, Math.round(img.height * ratio));
-                
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                canvas.toBlob(resolve, 'image/jpeg', quality);
+                try {
+                    // Calcul des dimensions en gardant le ratio
+                    const ratio = Math.min(maxWidth / img.width, maxHeight / img.height);
+                    const width = Math.round(img.width * ratio);
+                    const height = Math.round(img.height * ratio);
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    
+                    // Amélioration de la qualité de rendu
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
+                    
+                    // Fond blanc pour les JPEGs
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, width, height);
+                    
+                    // Dessiner l'image
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // Convertir en blob avec qualité adaptative
+                    canvas.toBlob((blob) => {
+                        if (blob) {
+                            resolve(blob);
+                        } else {
+                            reject(new Error('Impossible de compresser l\'image'));
+                        }
+                    }, 'image/jpeg', quality);
+                    
+                } catch (error) {
+                    reject(error);
+                }
+            };
+            
+            img.onerror = () => {
+                reject(new Error('Impossible de charger l\'image'));
             };
             
             img.src = URL.createObjectURL(file);
         });
     }
 
-    async uploadPhoto(missionId, photoType, file) {
+    // FONCTION CORRIGÉE : Upload vers serveur
+    async uploadPhotoToServer(missionId, photoType, file) {
         const formData = new FormData();
         formData.append('photo', file);
         formData.append('photoType', photoType);
         
         const response = await fetch(`${API_BASE_URL}/uploads/photos/${missionId}`, {
             method: 'POST',
-            body: formData
+            body: formData,
+            // Pas de Content-Type header avec FormData - le navigateur le gère automatiquement
         });
         
         if (!response.ok) {
-            throw new Error(`Erreur upload: ${response.status}`);
+            const errorData = await response.text();
+            throw new Error(`Erreur serveur ${response.status}: ${errorData}`);
         }
         
         return response.json();
@@ -436,28 +569,63 @@ class FiableAutoApp {
 
         const ctx = canvas.getContext('2d');
         ctx.strokeStyle = '#000';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 3; // Ligne plus épaisse pour mobile
         ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
 
-        // Events souris
-        canvas.addEventListener('mousedown', (e) => this.startDrawing(e, canvas, ctx));
-        canvas.addEventListener('mousemove', (e) => this.draw(e, canvas, ctx));
-        canvas.addEventListener('mouseup', () => this.stopDrawing(canvas));
+        // Support tactile amélioré
+        let isDrawing = false;
+        let lastPoint = null;
 
-        // Events tactiles
-        canvas.addEventListener('touchstart', (e) => {
+        const getEventPoint = (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches ? e.touches[0] : e;
+            return {
+                x: (touch.clientX - rect.left) * (canvas.width / rect.width),
+                y: (touch.clientY - rect.top) * (canvas.height / rect.height)
+            };
+        };
+
+        const startDrawing = (e) => {
             e.preventDefault();
-            this.startDrawing(e.touches[0], canvas, ctx);
-        }, { passive: false });
-        
+            isDrawing = true;
+            lastPoint = getEventPoint(e);
+            ctx.beginPath();
+            ctx.moveTo(lastPoint.x, lastPoint.y);
+        };
+
+        const draw = (e) => {
+            if (!isDrawing) return;
+            e.preventDefault();
+            
+            const currentPoint = getEventPoint(e);
+            ctx.lineTo(currentPoint.x, currentPoint.y);
+            ctx.stroke();
+            lastPoint = currentPoint;
+        };
+
+        const stopDrawing = (e) => {
+            if (!isDrawing) return;
+            e.preventDefault();
+            isDrawing = false;
+            this.signatureData = canvas.toDataURL('image/png');
+            this.updateFinalizationButton();
+        };
+
+        // Events tactiles (mobile)
+        canvas.addEventListener('touchstart', startDrawing, { passive: false });
+        canvas.addEventListener('touchmove', draw, { passive: false });
+        canvas.addEventListener('touchend', stopDrawing, { passive: false });
+
+        // Events souris (desktop)
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseleave', stopDrawing);
+
+        // Empêcher le scroll sur le canvas
         canvas.addEventListener('touchmove', (e) => {
             e.preventDefault();
-            this.draw(e.touches[0], canvas, ctx);
-        }, { passive: false });
-        
-        canvas.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            this.stopDrawing(canvas);
         }, { passive: false });
 
         // Bouton effacer
@@ -469,35 +637,6 @@ class FiableAutoApp {
                 this.updateFinalizationButton();
             });
         }
-    }
-
-    startDrawing(event, canvas, ctx) {
-        this.isDrawing = true;
-        const rect = canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
-        
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-    }
-
-    draw(event, canvas, ctx) {
-        if (!this.isDrawing) return;
-        
-        const rect = canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
-        
-        ctx.lineTo(x, y);
-        ctx.stroke();
-    }
-
-    stopDrawing(canvas) {
-        if (!this.isDrawing) return;
-        
-        this.isDrawing = false;
-        this.signatureData = canvas.toDataURL();
-        this.updateFinalizationButton();
     }
 
     // ========== FINALISATION MISSION ==========
@@ -624,14 +763,8 @@ class FiableAutoApp {
     }
 
     returnToHomePrestataire() {
-        // Reset des données de mission
-        this.currentMission = null;
-        this.departureValidated = false;
-        this.currentPhase = 'departure';
-        this.uploadedPhotos = { departure: {}, arrival: {} };
-        this.previewsDataURL = { departure: {}, arrival: {} };
-        this.signatureData = null;
-        this.checklistData = {};
+        // Reset complet
+        this.resetMissionData();
 
         // Masquer les écrans de détails
         const missionDetails = document.getElementById('missionDetails');
@@ -643,6 +776,40 @@ class FiableAutoApp {
         // Reset des formulaires
         const accessForm = document.getElementById('accessForm');
         if (accessForm) accessForm.reset();
+
+        // Reset des phases UI
+        const departurePhase = document.getElementById('departurePhase');
+        const arrivalPhase = document.getElementById('arrivalPhase');
+        
+        if (departurePhase) {
+            departurePhase.style.opacity = '1';
+            // Réactiver les contrôles
+            departurePhase.querySelectorAll('input, textarea').forEach(el => {
+                el.disabled = false;
+            });
+            departurePhase.querySelectorAll('.photo-card').forEach(card => {
+                card.classList.remove('locked', 'uploaded');
+            });
+        }
+        
+        if (arrivalPhase) {
+            arrivalPhase.style.display = 'none';
+        }
+
+        // Reset boutons
+        const validateBtn = document.getElementById('validateDeparture');
+        if (validateBtn) {
+            validateBtn.disabled = true;
+            validateBtn.innerHTML = '<i class="fas fa-check"></i> Valider Départ';
+            validateBtn.classList.remove('validated');
+        }
+
+        // Clear signature canvas
+        const canvas = document.getElementById('signatureCanvas');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
 
         // Scroll vers le haut
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -940,6 +1107,7 @@ class FiableAutoApp {
         try {
             const response = await this.apiCall('/missions');
             const missions = response.data || [];
+            this.allMissions = missions; // Stocker pour le filtrage
             this.displayMissionsList(missions);
         } catch (error) {
             console.error('Erreur chargement missions:', error);
@@ -951,10 +1119,12 @@ class FiableAutoApp {
         if (!missionsList) return;
 
         if (!missions.length) {
+            const filterText = this.currentFilter === 'all' ? '' : ` avec le statut "${this.getStatusText(this.currentFilter)}"`;
             missionsList.innerHTML = `
                 <div class="no-missions">
                     <i class="fas fa-inbox"></i>
-                    <p>Aucune mission créée pour le moment</p>
+                    <p>Aucune mission trouvée${filterText}</p>
+                    ${this.currentFilter !== 'all' ? '<button class="btn-enhanced btn-secondary" onclick="app.filterMissions(\'all\')">Voir toutes les missions</button>' : ''}
                 </div>
             `;
             return;
@@ -1037,32 +1207,64 @@ class FiableAutoApp {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // ========== RAPPORTS PDF ==========
+    // ========== RAPPORTS PDF (CORRIGÉ) ==========
     async downloadReport(missionId) {
         try {
             this.showLoading(true);
             
-            const response = await fetch(`${API_BASE_URL}/reports/${missionId}/pdf`);
+            // Appel API corrigé
+            const response = await fetch(`${API_BASE_URL}/reports/${missionId}/pdf`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/pdf'
+                }
+            });
+            
             if (!response.ok) {
-                throw new Error('Erreur lors du téléchargement du rapport');
+                throw new Error(`Erreur serveur ${response.status}: ${response.statusText}`);
+            }
+            
+            // Vérifier que c'est bien un PDF
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/pdf')) {
+                throw new Error('Le serveur n\'a pas renvoyé un fichier PDF valide');
             }
             
             const blob = await response.blob();
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
             
-            link.href = url;
-            link.download = `rapport-mission-${missionId}.pdf`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
+            // Créer un nom de fichier avec la date
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
+            const fileName = `rapport-mission-${missionId}-${dateStr}.pdf`;
             
-            this.showNotification('Rapport téléchargé avec succès! 📄', 'success');
+            // Téléchargement avec vérification mobile/desktop
+            if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+                // Support IE/Edge legacy
+                window.navigator.msSaveOrOpenBlob(blob, fileName);
+            } else {
+                // Méthode standard
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                
+                link.href = url;
+                link.download = fileName;
+                link.style.display = 'none';
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Nettoyer l'URL après un délai
+                setTimeout(() => {
+                    URL.revokeObjectURL(url);
+                }, 1000);
+            }
+            
+            this.showNotification('📄 Rapport téléchargé avec succès !', 'success');
             
         } catch (error) {
             console.error('Erreur téléchargement rapport:', error);
-            this.showNotification('Erreur lors du téléchargement du rapport', 'error');
+            this.showNotification(`Erreur téléchargement: ${error.message}`, 'error');
         } finally {
             this.showLoading(false);
         }
@@ -1085,7 +1287,7 @@ class FiableAutoApp {
                 body: JSON.stringify({ email: email })
             });
             
-            this.showNotification(`Rapport envoyé avec succès à ${email}! 📧`, 'success');
+            this.showNotification(`📧 Rapport envoyé avec succès à ${email} !`, 'success');
             
         } catch (error) {
             console.error('Erreur envoi email:', error);
@@ -1124,16 +1326,25 @@ class FiableAutoApp {
     showNotification(message, type = 'info') {
         const notification = document.getElementById('notification');
         if (!notification) {
-            alert(message);
+            // Fallback si pas d'élément notification
+            if (type === 'error') {
+                alert(`❌ ${message}`);
+            } else if (type === 'success') {
+                console.log(`✅ ${message}`);
+            } else {
+                console.log(`ℹ️ ${message}`);
+            }
             return;
         }
         
         notification.textContent = message;
         notification.className = `notification ${type} show`;
         
+        // Auto-hide après 4 secondes (sauf pour les erreurs)
+        const hideDelay = type === 'error' ? 6000 : 4000;
         setTimeout(() => {
             notification.classList.remove('show');
-        }, 4000);
+        }, hideDelay);
     }
 
     // ========== PWA ==========
@@ -1159,7 +1370,7 @@ class FiableAutoApp {
     showInstallPrompt(deferredPrompt) {
         const installButton = document.createElement('button');
         installButton.className = 'btn-enhanced btn-primary install-prompt';
-        installButton.innerHTML = '<i class="fas fa-download"></i> Installer l\'application';
+        installButton.innerHTML = '<i class="fas fa-download"></i> Installer l\'app';
         installButton.style.cssText = `
             position: fixed;
             bottom: 20px;
@@ -1200,6 +1411,37 @@ class FiableAutoApp {
         this.setupAutoSave();
         this.loadThemePreference();
         this.setupKeyboardShortcuts();
+        this.optimizeForMobile();
+    }
+
+    // NOUVEAU : Optimisations mobile
+    optimizeForMobile() {
+        // Détecter si on est sur mobile
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        if (isMobile) {
+            // Ajuster la viewport height pour mobile
+            const setVH = () => {
+                const vh = window.innerHeight * 0.01;
+                document.documentElement.style.setProperty('--vh', `${vh}px`);
+            };
+            
+            setVH();
+            window.addEventListener('resize', setVH);
+            window.addEventListener('orientationchange', setVH);
+
+            // Améliorer les zones de toucher
+            document.body.classList.add('mobile-optimized');
+            
+            // Empêcher le zoom sur les inputs
+            const inputs = document.querySelectorAll('input, textarea, select');
+            inputs.forEach(input => {
+                input.addEventListener('focus', () => {
+                    input.setAttribute('readonly', 'readonly');
+                    input.setAttribute('onfocus', 'this.removeAttribute("readonly");');
+                });
+            });
+        }
     }
 
     setupAutoSave() {
@@ -1297,9 +1539,9 @@ class FiableAutoApp {
             // Ctrl/Cmd + S pour sauvegarder les observations
             if ((e.ctrlKey || e.metaKey) && e.key === 's') {
                 e.preventDefault();
-                const activeObservations = document.activeElement;
-                if (activeObservations && (activeObservations.id === 'departureObservations' || activeObservations.id === 'arrivalObservations')) {
-                    this.autoSaveObservations(activeObservations.id);
+                const activeElement = document.activeElement;
+                if (activeElement && (activeElement.id === 'departureObservations' || activeElement.id === 'arrivalObservations')) {
+                    this.autoSaveObservations(activeElement.id);
                     this.showNotification('Observations sauvegardées', 'success');
                 }
             }
@@ -1325,18 +1567,6 @@ window.toggleTheme = () => {
 window.getCurrentLocation = (inputId) => {
     if (window.app) {
         window.app.getCurrentLocation(inputId);
-    }
-};
-
-window.openQrScanner = () => {
-    if (window.app) {
-        window.app.openQrScanner();
-    }
-};
-
-window.closeQrScanner = () => {
-    if (window.app) {
-        window.app.closeQrScanner();
     }
 };
 
