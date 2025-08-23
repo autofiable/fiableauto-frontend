@@ -1,513 +1,123 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FiableAuto - Solution professionnelle d'inspection véhicules</title>
-    <meta name="description" content="Application professionnelle d'inspection et de convoyage de véhicules partout en France">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚗</text></svg>">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-    <style>
-        /* CSS pour les photos et archivage */
-        .photo-btn {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 12px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 8px;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: background 0.2s;
-        }
-        .photo-btn:hover {
-            background: #0056b3;
-        }
-        .photo-item {
-            text-align: center;
-            padding: 15px;
-            border: 2px dashed #ddd;
-            border-radius: 8px;
-            transition: border-color 0.2s;
-        }
-        .photo-item:hover {
-            border-color: #007bff;
-        }
-        .photo-item.uploaded {
-            border-color: #28a745;
-            background: #f8fff9;
-        }
-        .upload-status {
-            margin-top: 8px;
-            font-size: 18px;
-        }
-        .mission-item {
-            margin-bottom: 20px;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 12px;
-            background: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .mission-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .mission-header h4 {
-            margin: 0;
-            color: #333;
-        }
-        .status-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-            text-transform: uppercase;
-            white-space: nowrap;
-        }
-        .status-pending { background: #fff3cd; color: #856404; }
-        .status-in_progress { background: #d1ecf1; color: #0c5460; }
-        .status-completed { background: #d4edda; color: #155724; }
-        .status-cancelled { background: #f8d7da; color: #721c24; }
-        .mission-details {
-            margin: 15px 0;
-            line-height: 1.6;
-        }
-        .mission-details p {
-            margin: 8px 0;
-            font-size: 14px;
-        }
-        .mission-actions {
-            margin-top: 15px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .btn-secondary:hover {
-            background: #545b62;
-        }
-        .btn-success {
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .btn-success:hover {
-            background: #1e7e34;
-        }
-        @media (max-width: 768px) {
-            .mission-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .mission-actions {
-                flex-direction: column;
-            }
-            .btn-secondary, .btn-success {
-                justify-content: center;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FiableAuto – Web App</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
-<body>
-    <!-- État de connexion -->
-    <div id="connectionStatus" class="connection-status testing">
-        <i class="fas fa-wifi"></i> Test connexion...
-    </div>
+<body data-theme="light">
+  <header>
+    <h1>🚗 FiableAuto</h1>
+  </header>
 
-    <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="loading-overlay">
-        <div class="loading-content">
-            <div class="spinner"></div>
-            <p>Chargement en cours...</p>
+  <!-- Navigation -->
+  <nav class="nav">
+    <button class="nav-pill active" data-section="gestionnaire"><i class="fas fa-user-tie"></i> Gestionnaire</button>
+    <button class="nav-pill" data-section="prestataire"><i class="fas fa-user-cog"></i> Prestataire</button>
+    <button class="nav-pill" data-section="client"><i class="fas fa-user"></i> Client</button>
+  </nav>
+
+  <!-- GESTIONNAIRE -->
+  <section id="gestionnaire" class="section active">
+    <h2>Créer une mission</h2>
+    <form id="missionForm" class="enhanced-form">
+      <div class="form-grid">
+        <input type="text" name="vehicleBrand" placeholder="Marque" required>
+        <input type="text" name="vehicleModel" placeholder="Modèle" required>
+        <input type="number" name="vehicleYear" placeholder="Année">
+        <input type="text" name="licensePlate" placeholder="Immatriculation">
+        <input type="number" name="mileage" placeholder="Kilométrage">
+        <input type="text" name="pickupLocation" placeholder="Lieu prise en charge" required>
+        <input type="text" name="deliveryLocation" placeholder="Lieu livraison" required>
+        <input type="date" name="pickupDate">
+        <input type="date" name="deliveryDate">
+        <input type="text" name="clientName" placeholder="Nom client" required>
+        <input type="email" name="clientEmail" placeholder="Email client" required>
+        <input type="text" name="clientPhone" placeholder="Téléphone client">
+      </div>
+      <button type="submit" class="btn-enhanced btn-primary">Créer mission</button>
+    </form>
+
+    <h3>Missions archivées</h3>
+    <div id="missionsList"></div>
+  </section>
+
+  <!-- PRESTATAIRE -->
+  <section id="prestataire" class="section">
+    <h2>Accéder à une mission</h2>
+    <form id="accessForm" class="enhanced-form">
+      <input type="text" id="missionCode" placeholder="Code mission" required>
+      <button type="submit" class="btn-enhanced btn-primary">Accéder</button>
+    </form>
+
+    <div id="missionDetails" style="display:none; margin-top:20px;">
+      <div id="missionInfo"></div>
+
+      <!-- Checklist -->
+      <div id="checklist" class="enhanced-form-section">
+        <div class="section-title"><i class="fas fa-list-check"></i> Checklist</div>
+        <label><input type="radio" name="vehiclePapers" value="ok"> Papiers ok</label>
+        <label><input type="radio" name="gps" value="ok"> GPS</label>
+        <label><input type="radio" name="sdCard" value="ok"> Carte SD</label>
+        <label><input type="radio" name="safetyKit" value="ok"> Kit sécurité</label>
+        <label><input type="radio" name="spareWheel" value="ok"> Roue de secours</label>
+      </div>
+
+      <!-- Photos obligatoires -->
+      <div class="enhanced-form-section">
+        <h4><i class="fas fa-camera"></i> Photos obligatoires</h4>
+        <div class="photo-grid">
+          <div class="photo-card"><input type="file" data-photo="compteur"></div>
+          <div class="photo-card"><input type="file" data-photo="face-avant"></div>
+          <div class="photo-card"><input type="file" data-photo="face-arriere"></div>
+          <div class="photo-card"><input type="file" data-photo="lateral-gauche-avant"></div>
+          <div class="photo-card"><input type="file" data-photo="lateral-gauche-arriere"></div>
+          <div class="photo-card"><input type="file" data-photo="lateral-droit-avant"></div>
+          <div class="photo-card"><input type="file" data-photo="lateral-droit-arriere"></div>
+          <div class="photo-card"><input type="file" data-photo="moteur"></div>
+          <div class="photo-card"><input type="file" data-photo="interieur"></div>
+          <div class="photo-card"><input type="file" data-photo="carnet"></div>
         </div>
-    </div>
+      </div>
 
-    <!-- Notifications -->
-    <div id="notification" class="notification"></div>
+      <!-- Observations -->
+      <div class="enhanced-form-section">
+        <textarea id="observations" placeholder="Observations..."></textarea>
+      </div>
 
-    <!-- Header Moderne -->
-    <header class="header-modern">
-        <div class="container">
-            <!-- Logo App Style -->
-            <div class="app-logo">
-                <div class="logo-icon">
-                    <i class="fas fa-car"></i>
-                </div>
-                <div class="logo-text">
-                    <h1>Fiable<span class="logo-accent">Auto</span></h1>
-                    <div class="tagline">Solution Professionnelle</div>
-                </div>
-            </div>
-
-            <!-- Navigation Pills -->
-            <nav class="nav-pills">
-                <button class="nav-pill active" data-section="gestionnaire">
-                    <span class="pill-text">🏢 Gestionnaire</span>
-                </button>
-                <button class="nav-pill" data-section="prestataire">
-                    <span class="pill-text">🔧 Prestataire</span>
-                </button>
-                <button class="nav-pill" data-section="client">
-                    <span class="pill-text">👤 Client</span>
-                </button>
-            </nav>
+      <!-- Signature -->
+      <div style="margin-top:20px;">
+        <h4><i class="fas fa-signature"></i> Signature du client</h4>
+        <canvas id="signatureCanvas" width="500" height="200" style="border:1px solid #ccc;"></canvas>
+        <div style="margin-top:10px;">
+          <button type="button" id="clearSignature" class="btn-enhanced btn-secondary">Effacer</button>
+          <button type="button" id="finalizeInspection" class="btn-enhanced btn-primary">Signer et Terminer</button>
         </div>
-    </header>
+      </div>
+    </div>
+  </section>
 
-    <!-- Contenu Principal -->
-    <main class="container">
-        <!-- Section Gestionnaire -->
-        <section id="gestionnaire" class="section active">
-            <div class="section-header">
-                <h2><i class="fas fa-building"></i> Interface Gestionnaire</h2>
-                <p>Créez et gérez vos missions d'inspection en quelques clics</p>
-            </div>
+  <!-- CLIENT -->
+  <section id="client" class="section">
+    <h2>Suivi client</h2>
+    <form id="trackingForm" class="enhanced-form">
+      <input type="text" id="trackingCode" placeholder="Code mission" required>
+      <button type="submit" class="btn-enhanced btn-primary">Suivre</button>
+    </form>
+    <div id="trackingResult" style="display:none;">
+      <div id="trackingInfo"></div>
+      <div id="downloadSection" style="display:none;">
+        <button id="downloadReport" class="btn-enhanced btn-success">Télécharger rapport</button>
+        <button onclick="sendReportByEmail()" class="btn-enhanced btn-secondary">Envoyer par email</button>
+      </div>
+    </div>
+  </section>
 
-            <!-- Statistiques -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3 id="totalMissions">0</h3>
-                    <p>Missions créées</p>
-                </div>
-                <div class="stat-card">
-                    <h3 id="pendingMissions">0</h3>
-                    <p>En attente</p>
-                </div>
-                <div class="stat-card">
-                    <h3 id="completedMissions">0</h3>
-                    <p>Terminées</p>
-                </div>
-                <div class="stat-card">
-                    <h3 id="progressMissions">0</h3>
-                    <p>En cours</p>
-                </div>
-            </div>
+  <div id="notification" class="notification"></div>
+  <div id="loadingOverlay" class="loading-overlay"><div class="loader"></div></div>
 
-            <!-- Formulaire de création CORRIGÉ -->
-            <div class="card">
-                <h3><i class="fas fa-plus-circle"></i> Créer une nouvelle mission</h3>
-                <form id="missionForm">
-                    <div class="grid grid-2">
-                        <div class="form-group">
-                            <label for="vehicleBrand">Marque du véhicule</label>
-                            <input type="text" id="vehicleBrand" name="vehicleBrand" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="vehicleModel">Modèle</label>
-                            <input type="text" id="vehicleModel" name="vehicleModel" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="vehicleYear">Année</label>
-                            <input type="number" id="vehicleYear" name="vehicleYear" min="1990" max="2025" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="licensePlate">Plaque d'immatriculation</label>
-                            <input type="text" id="licensePlate" name="licensePlate" required>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-2">
-                        <div class="form-group">
-                            <label for="pickupLocation">Lieu de prise en charge</label>
-                            <input type="text" id="pickupLocation" name="pickupLocation" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="deliveryLocation">Lieu de livraison</label>
-                            <input type="text" id="deliveryLocation" name="deliveryLocation" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="pickupDate">Date de prise en charge</label>
-                            <input type="datetime-local" id="pickupDate" name="pickupDate" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="deliveryDate">Date de livraison prévue</label>
-                            <input type="datetime-local" id="deliveryDate" name="deliveryDate" required>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-3">
-                        <div class="form-group">
-                            <label for="clientName">Nom du client</label>
-                            <input type="text" id="clientName" name="clientName" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="clientEmail">Email du client</label>
-                            <input type="email" id="clientEmail" name="clientEmail" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="clientPhone">Téléphone du client</label>
-                            <input type="tel" id="clientPhone" name="clientPhone" required>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="urgency">Niveau d'urgence</label>
-                        <select id="urgency" name="urgency">
-                            <option value="normal">Normal</option>
-                            <option value="urgent">Urgent</option>
-                            <option value="critical">Critique</option>
-                        </select>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-rocket"></i> Créer la mission
-                    </button>
-                </form>
-            </div>
-
-            <!-- Missions créées avec archivage -->
-            <div class="card">
-                <h3><i class="fas fa-archive"></i> Toutes les missions</h3>
-                <div id="missionsList">
-                    <p>Aucune mission créée pour le moment.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Section Prestataire -->
-        <section id="prestataire" class="section">
-            <div class="section-header">
-                <h2><i class="fas fa-tools"></i> Interface Prestataire</h2>
-                <p>Accédez à votre mission et complétez l'inspection</p>
-            </div>
-
-            <!-- Accès mission -->
-            <div class="card">
-                <h3><i class="fas fa-key"></i> Accéder à une mission</h3>
-                <form id="accessForm">
-                    <div class="form-group">
-                        <label for="missionCode">Code de mission</label>
-                        <input type="text" id="missionCode" name="missionCode" placeholder="Ex: FA-20250823-001" required>
-                    </div>
-                    <button type="submit" class="btn btn-secondary">
-                        <i class="fas fa-search"></i> Accéder à la mission
-                    </button>
-                </form>
-            </div>
-
-            <!-- Détails mission -->
-            <div id="missionDetails" class="card" style="display: none;">
-                <h3><i class="fas fa-car"></i> Détails de la mission</h3>
-                <div id="missionInfo"></div>
-                
-                <!-- Progress Bar -->
-                <div class="progress-container">
-                    <div class="progress-steps">
-                        <div class="progress-line" id="progressLine"></div>
-                        <div class="progress-step active">1</div>
-                        <div class="progress-step">2</div>
-                        <div class="progress-step">3</div>
-                        <div class="progress-step">4</div>
-                    </div>
-                    <div class="progress-labels">
-                        <span>Accès</span>
-                        <span>Photos</span>
-                        <span>Signature</span>
-                        <span>Finalisé</span>
-                    </div>
-                </div>
-
-                <!-- Upload Photos CORRIGÉ AVEC APPAREIL PHOTO -->
-                <div class="photo-section">
-                    <h4><i class="fas fa-camera"></i> Photos obligatoires (8)</h4>
-                    <div class="photo-grid">
-                        <div class="photo-item" data-type="compteur">
-                            <i class="fas fa-tachometer-alt"></i>
-                            <p>Compteur kilométrique</p>
-                            <input type="file" accept="image/*" capture="environment" data-photo="compteur" style="display: none;" id="photo-compteur">
-                            <button type="button" class="photo-btn" onclick="document.getElementById('photo-compteur').click()">
-                                <i class="fas fa-camera"></i> Prendre photo compteur
-                            </button>
-                            <img class="photo-preview" style="display: none; max-width: 100%; margin-top: 10px; border-radius: 8px;">
-                            <div class="upload-status"></div>
-                        </div>
-                        
-                        <div class="photo-item" data-type="face-avant">
-                            <i class="fas fa-car"></i>
-                            <p>Face avant véhicule</p>
-                            <input type="file" accept="image/*" capture="environment" data-photo="face-avant" style="display: none;" id="photo-face-avant">
-                            <button type="button" class="photo-btn" onclick="document.getElementById('photo-face-avant').click()">
-                                <i class="fas fa-camera"></i> Prendre photo face avant
-                            </button>
-                            <img class="photo-preview" style="display: none; max-width: 100%; margin-top: 10px; border-radius: 8px;">
-                            <div class="upload-status"></div>
-                        </div>
-                        
-                        <div class="photo-item" data-type="face-arriere">
-                            <i class="fas fa-car"></i>
-                            <p>Face arrière véhicule</p>
-                            <input type="file" accept="image/*" capture="environment" data-photo="face-arriere" style="display: none;" id="photo-face-arriere">
-                            <button type="button" class="photo-btn" onclick="document.getElementById('photo-face-arriere').click()">
-                                <i class="fas fa-camera"></i> Prendre photo face arrière
-                            </button>
-                            <img class="photo-preview" style="display: none; max-width: 100%; margin-top: 10px; border-radius: 8px;">
-                            <div class="upload-status"></div>
-                        </div>
-                        
-                        <div class="photo-item" data-type="cote-gauche">
-                            <i class="fas fa-car-side"></i>
-                            <p>Côté gauche véhicule</p>
-                            <input type="file" accept="image/*" capture="environment" data-photo="cote-gauche" style="display: none;" id="photo-cote-gauche">
-                            <button type="button" class="photo-btn" onclick="document.getElementById('photo-cote-gauche').click()">
-                                <i class="fas fa-camera"></i> Prendre photo côté gauche
-                            </button>
-                            <img class="photo-preview" style="display: none; max-width: 100%; margin-top: 10px; border-radius: 8px;">
-                            <div class="upload-status"></div>
-                        </div>
-                        
-                        <div class="photo-item" data-type="cote-droit">
-                            <i class="fas fa-car-side"></i>
-                            <p>Côté droit véhicule</p>
-                            <input type="file" accept="image/*" capture="environment" data-photo="cote-droit" style="display: none;" id="photo-cote-droit">
-                            <button type="button" class="photo-btn" onclick="document.getElementById('photo-cote-droit').click()">
-                                <i class="fas fa-camera"></i> Prendre photo côté droit
-                            </button>
-                            <img class="photo-preview" style="display: none; max-width: 100%; margin-top: 10px; border-radius: 8px;">
-                            <div class="upload-status"></div>
-                        </div>
-                        
-                        <div class="photo-item" data-type="moteur">
-                            <i class="fas fa-cog"></i>
-                            <p>Compartiment moteur</p>
-                            <input type="file" accept="image/*" capture="environment" data-photo="moteur" style="display: none;" id="photo-moteur">
-                            <button type="button" class="photo-btn" onclick="document.getElementById('photo-moteur').click()">
-                                <i class="fas fa-camera"></i> Prendre photo moteur
-                            </button>
-                            <img class="photo-preview" style="display: none; max-width: 100%; margin-top: 10px; border-radius: 8px;">
-                            <div class="upload-status"></div>
-                        </div>
-                        
-                        <div class="photo-item" data-type="carnet">
-                            <i class="fas fa-book"></i>
-                            <p>Carnet d'entretien</p>
-                            <input type="file" accept="image/*" capture="environment" data-photo="carnet" style="display: none;" id="photo-carnet">
-                            <button type="button" class="photo-btn" onclick="document.getElementById('photo-carnet').click()">
-                                <i class="fas fa-camera"></i> Prendre photo carnet
-                            </button>
-                            <img class="photo-preview" style="display: none; max-width: 100%; margin-top: 10px; border-radius: 8px;">
-                            <div class="upload-status"></div>
-                        </div>
-                        
-                        <div class="photo-item" data-type="interieur">
-                            <i class="fas fa-couch"></i>
-                            <p>Intérieur véhicule</p>
-                            <input type="file" accept="image/*" capture="environment" data-photo="interieur" style="display: none;" id="photo-interieur">
-                            <button type="button" class="photo-btn" onclick="document.getElementById('photo-interieur').click()">
-                                <i class="fas fa-camera"></i> Prendre photo intérieur
-                            </button>
-                            <img class="photo-preview" style="display: none; max-width: 100%; margin-top: 10px; border-radius: 8px;">
-                            <div class="upload-status"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Observations -->
-                <div class="form-group">
-                    <label for="observations">Observations</label>
-                    <textarea id="observations" name="observations" rows="4" placeholder="Décrivez l'état du véhicule, les éventuels dommages ou remarques..."></textarea>
-                </div>
-
-                <!-- Signature -->
-                <div class="signature-section">
-                    <h4><i class="fas fa-signature"></i> Signature du client</h4>
-                    <div class="signature-container">
-                        <canvas id="signatureCanvas" class="signature-canvas" width="400" height="200"></canvas>
-                    </div>
-                    <div class="signature-controls">
-                        <button type="button" class="btn btn-secondary" id="clearSignature">
-                            <i class="fas fa-eraser"></i> Effacer
-                        </button>
-                        <button type="button" class="btn btn-primary" id="finalizeInspection">
-                            <i class="fas fa-check"></i> Finaliser l'inspection
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Section Client -->
-        <section id="client" class="section">
-            <div class="section-header">
-                <h2><i class="fas fa-user"></i> Interface Client</h2>
-                <p>Suivez l'avancement de votre inspection en temps réel</p>
-            </div>
-
-            <!-- Suivi mission -->
-            <div class="card">
-                <h3><i class="fas fa-search"></i> Suivre ma mission</h3>
-                <form id="trackingForm">
-                    <div class="form-group">
-                        <label for="trackingCode">Code de suivi</label>
-                        <input type="text" id="trackingCode" name="trackingCode" placeholder="Ex: FA-20250823-001" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-search"></i> Suivre la mission
-                    </button>
-                </form>
-            </div>
-
-            <!-- Status mission -->
-            <div id="trackingResult" class="card" style="display: none;">
-                <h3><i class="fas fa-info-circle"></i> État de votre mission</h3>
-                <div id="trackingInfo"></div>
-                
-                <!-- Progress client -->
-                <div class="progress-container">
-                    <div class="progress-steps">
-                        <div class="progress-line" id="clientProgressLine"></div>
-                        <div class="progress-step completed">✓</div>
-                        <div class="progress-step" id="clientStep2">2</div>
-                        <div class="progress-step" id="clientStep3">3</div>
-                        <div class="progress-step" id="clientStep4">4</div>
-                    </div>
-                    <div class="progress-labels">
-                        <span>Mission créée</span>
-                        <span>Inspection en cours</span>
-                        <span>Photos & signature</span>
-                        <span>Rapport disponible</span>
-                    </div>
-                </div>
-
-                <!-- Download rapport -->
-                <div id="downloadSection" style="display: none;">
-                    <button class="btn btn-primary" id="downloadReport">
-                        <i class="fas fa-download"></i> Télécharger le rapport PDF
-                    </button>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
