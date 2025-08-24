@@ -94,66 +94,105 @@
             <label><input type="checkbox" name="spareWheel" value="ok"> Roue de secours</label>
           </div>
 
-          <!-- Photos de départ -->
+          <!-- Photos de départ AVEC ICÔNES -->
           <div class="enhanced-form-section">
             <h4><i class="fas fa-camera"></i> Photos de départ</h4>
             <div class="photo-grid" id="departurePhotos">
               <div class="photo-card">
-                <label>Compteur</label>
+                <div class="photo-header">
+                  <i class="fas fa-tachometer-alt photo-icon"></i>
+                  <label>Compteur</label>
+                </div>
                 <input type="file" data-photo="compteur" accept="image/*" capture="environment" required>
                 <div class="photo-preview"></div>
                 <div class="upload-status"></div>
               </div>
+              
               <div class="photo-card">
-                <label>Face avant</label>
+                <div class="photo-header">
+                  <i class="fas fa-car photo-icon"></i>
+                  <label>Face avant</label>
+                </div>
                 <input type="file" data-photo="face-avant" accept="image/*" capture="environment" required>
                 <div class="photo-preview"></div>
                 <div class="upload-status"></div>
               </div>
+              
               <div class="photo-card">
-                <label>Face arrière</label>
+                <div class="photo-header">
+                  <i class="fas fa-car-rear photo-icon"></i>
+                  <label>Face arrière</label>
+                </div>
                 <input type="file" data-photo="face-arriere" accept="image/*" capture="environment" required>
                 <div class="photo-preview"></div>
                 <div class="upload-status"></div>
               </div>
+              
               <div class="photo-card">
-                <label>Latéral gauche avant</label>
+                <div class="photo-header">
+                  <i class="fas fa-car-side photo-icon"></i>
+                  <label>Latéral gauche avant</label>
+                </div>
                 <input type="file" data-photo="lateral-gauche-avant" accept="image/*" capture="environment" required>
                 <div class="photo-preview"></div>
                 <div class="upload-status"></div>
               </div>
+              
               <div class="photo-card">
-                <label>Latéral gauche arrière</label>
+                <div class="photo-header">
+                  <i class="fas fa-car-side photo-icon" style="transform: scaleX(-1);"></i>
+                  <label>Latéral gauche arrière</label>
+                </div>
                 <input type="file" data-photo="lateral-gauche-arriere" accept="image/*" capture="environment" required>
                 <div class="photo-preview"></div>
                 <div class="upload-status"></div>
               </div>
+              
               <div class="photo-card">
-                <label>Latéral droit avant</label>
+                <div class="photo-header">
+                  <i class="fas fa-car-side photo-icon"></i>
+                  <label>Latéral droit avant</label>
+                </div>
                 <input type="file" data-photo="lateral-droit-avant" accept="image/*" capture="environment" required>
                 <div class="photo-preview"></div>
                 <div class="upload-status"></div>
               </div>
+              
               <div class="photo-card">
-                <label>Latéral droit arrière</label>
+                <div class="photo-header">
+                  <i class="fas fa-car-side photo-icon" style="transform: scaleX(-1);"></i>
+                  <label>Latéral droit arrière</label>
+                </div>
                 <input type="file" data-photo="lateral-droit-arriere" accept="image/*" capture="environment" required>
                 <div class="photo-preview"></div>
                 <div class="upload-status"></div>
               </div>
+              
               <div class="photo-card">
-                <label>Moteur</label>
+                <div class="photo-header">
+                  <i class="fas fa-cog photo-icon"></i>
+                  <label>Moteur</label>
+                </div>
                 <input type="file" data-photo="moteur" accept="image/*" capture="environment" required>
                 <div class="photo-preview"></div>
                 <div class="upload-status"></div>
               </div>
+              
               <div class="photo-card">
-                <label>Intérieur</label>
+                <div class="photo-header">
+                  <i class="fas fa-chair photo-icon"></i>
+                  <label>Intérieur</label>
+                </div>
                 <input type="file" data-photo="interieur" accept="image/*" capture="environment" required>
                 <div class="photo-preview"></div>
                 <div class="upload-status"></div>
               </div>
+              
               <div class="photo-card">
-                <label>Carnet d'entretien</label>
+                <div class="photo-header">
+                  <i class="fas fa-book photo-icon"></i>
+                  <label>Carnet d'entretien</label>
+                </div>
                 <input type="file" data-photo="carnet" accept="image/*" capture="environment" required>
                 <div class="photo-preview"></div>
                 <div class="upload-status"></div>
@@ -176,24 +215,35 @@
         <div id="arrivalPhase" class="mission-phase" style="display:none;">
           <h3 class="phase-title"><i class="fas fa-flag-checkered"></i> Phase Arrivée</h3>
           
-          <!-- Photos d'arrivée -->
+          <!-- Photos d'arrivée AVEC ICÔNES -->
           <div class="enhanced-form-section">
             <h4><i class="fas fa-camera"></i> Photos d'arrivée</h4>
             <div class="photo-grid" id="arrivalPhotos">
               <div class="photo-card">
-                <label>Compteur final</label>
+                <div class="photo-header">
+                  <i class="fas fa-tachometer-alt photo-icon"></i>
+                  <label>Compteur final</label>
+                </div>
                 <input type="file" data-photo="compteur-final" accept="image/*" capture="environment" required>
                 <div class="photo-preview"></div>
                 <div class="upload-status"></div>
               </div>
+              
               <div class="photo-card">
-                <label>État général final</label>
+                <div class="photo-header">
+                  <i class="fas fa-car-crash photo-icon"></i>
+                  <label>État général final</label>
+                </div>
                 <input type="file" data-photo="etat-final" accept="image/*" capture="environment" required>
                 <div class="photo-preview"></div>
                 <div class="upload-status"></div>
               </div>
+              
               <div class="photo-card">
-                <label>Remise clés</label>
+                <div class="photo-header">
+                  <i class="fas fa-key photo-icon"></i>
+                  <label>Remise clés</label>
+                </div>
                 <input type="file" data-photo="remise-cles" accept="image/*" capture="environment" required>
                 <div class="photo-preview"></div>
                 <div class="upload-status"></div>
