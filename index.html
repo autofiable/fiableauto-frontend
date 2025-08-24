@@ -348,8 +348,6 @@
 
   <script src="script.js"></script>
 
-  <script src="script.js"></script>
-  
   <!-- 🔧 PATCH MOBILE URGENT -->
   <script>
   (function() {
@@ -411,6 +409,68 @@
       }, 2000);
   })();
   </script>
+
+  <script>
+setTimeout(function() {
+    console.log('🔧 Application patch complémentaire...');
+    
+    try {
+        // 1. MASQUER EDL DÉPART quand validé
+        function hideCompletedDeparture() {
+            const validateBtn = document.getElementById('validateDeparture');
+            const departurePhase = document.getElementById('departurePhase');
+            
+            if (validateBtn && validateBtn.disabled && departurePhase) {
+                departurePhase.style.display = 'none';
+                console.log('✅ EDL Départ masqué');
+            }
+        }
+        
+        // 2. OVERRIDE du bouton VALIDER DÉPART
+        const validateBtn = document.getElementById('validateDeparture');
+        if (validateBtn) {
+            validateBtn.addEventListener('click', function(e) {
+                setTimeout(hideCompletedDeparture, 1000);
+            });
+        }
+        
+        // 3. FIX FINALISER MISSION
+        const finalizeBtn = document.getElementById('finalizeMission');
+        if (finalizeBtn) {
+            finalizeBtn.onclick = null;
+            
+            finalizeBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const arrivalPhotos = document.querySelectorAll('#arrivalPhotos .photo-card.uploaded').length;
+                
+                if (arrivalPhotos < 3) {
+                    alert('❌ Il faut uploader les 3 photos d\'arrivée');
+                    return;
+                }
+                
+                // FINALISATION OK
+                this.disabled = true;
+                this.innerHTML = '🎉 Mission Finalisée';
+                
+                const completionScreen = document.getElementById('completionScreen');
+                if (completionScreen) {
+                    completionScreen.style.display = 'block';
+                    completionScreen.scrollIntoView({ behavior: 'smooth' });
+                }
+                
+                alert('🎉 Mission finalisée avec succès !');
+            });
+        }
+        
+    } catch (error) {
+        console.error('❌ Erreur patch:', error);
+    }
+    
+}, 3000);
+</script>
+
 </body>
 </html>
+
 
