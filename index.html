@@ -348,129 +348,148 @@
 
   <script src="script.js"></script>
 
-  <!-- 🔧 PATCH MOBILE URGENT -->
-  <script>
-  (function() {
-      console.log('🔧 Chargement patch mobile...');
-      
-      setTimeout(function() {
-          try {
-              // 1. FIX TEXTAREA
-              document.querySelectorAll('textarea').forEach(textarea => {
-                  textarea.style.fontSize = '16px';
-                  textarea.removeAttribute('readonly');
-                  
-                  textarea.addEventListener('touchstart', function(e) {
-                      e.stopPropagation();
-                      this.focus();
-                  }, { passive: false });
-              });
-              
-              // 2. FIX VALIDATION DÉPART
-              const validateBtn = document.getElementById('validateDeparture');
-              if (validateBtn) {
-                  validateBtn.onclick = null;
-                  
-                  validateBtn.addEventListener('click', function(e) {
-                      e.preventDefault();
-                      
-                      const checkboxes = document.querySelectorAll('#checklist input:checked').length;
-                      const photos = document.querySelectorAll('.photo-card.uploaded').length;
-                      
-                      if (checkboxes < 5) {
-                          alert('❌ Cochez les 5 cases de la checklist');
-                          return;
-                      }
-                      
-                      if (photos < 10) {
-                          alert('❌ Uploadez les 10 photos requises');
-                          return;
-                      }
-                      
-                      this.disabled = true;
-                      this.innerHTML = '✅ Validé';
-                      this.style.background = '#10b981';
-                      
-                      const arrivalPhase = document.getElementById('arrivalPhase');
-                      if (arrivalPhase) {
-                          arrivalPhase.style.display = 'block';
-                          setTimeout(() => arrivalPhase.scrollIntoView({behavior: 'smooth'}), 500);
-                      }
-                      
-                      alert('✅ EDL Départ validé !');
-                  });
-              }
-              
-              console.log('✅ Patch mobile appliqué');
-              
-          } catch (error) {
-              console.error('❌ Erreur patch:', error);
-          }
-      }, 2000);
-  })();
-  </script>
+  <script src="script.js"></script>
 
-  <script>
-setTimeout(function() {
-    console.log('🔧 Application patch complémentaire...');
+<!-- 🔧 PATCH FINAL UNIQUE (remplace tous les autres) -->
+<script>
+(function() {
+    console.log('🔧 Application patch final...');
     
-    try {
-        // 1. MASQUER EDL DÉPART quand validé
-        function hideCompletedDeparture() {
+    setTimeout(function() {
+        try {
+            // Variables globales
+            window.missionCompleted = false;
+            window.departureValidated = false;
+            
+            // 1. FIX TEXTAREA
+            document.querySelectorAll('textarea').forEach(textarea => {
+                textarea.style.fontSize = '16px';
+                textarea.removeAttribute('readonly');
+            });
+            
+            // 2. FIX VALIDATION DÉPART (SANS ERREUR)
             const validateBtn = document.getElementById('validateDeparture');
-            const departurePhase = document.getElementById('departurePhase');
-            
-            if (validateBtn && validateBtn.disabled && departurePhase) {
-                departurePhase.style.display = 'none';
-                console.log('✅ EDL Départ masqué');
+            if (validateBtn) {
+                validateBtn.onclick = null;
+                validateBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    try {
+                        const checkboxes = document.querySelectorAll('#checklist input:checked').length;
+                        const photos = document.querySelectorAll('#departurePhotos .photo-card.uploaded').length;
+                        
+                        if (checkboxes < 5 || photos < 10) {
+                            alert('❌ Vérifiez checklist et photos');
+                            return;
+                        }
+                        
+                        window.departureValidated = true;
+                        this.disabled = true;
+                        this.innerHTML = '✅ Départ Validé';
+                        this.style.background = '#10b981';
+                        
+                        // Masquer EDL départ
+                        setTimeout(() => {
+                            document.getElementById('departurePhase').style.display = 'none';
+                        }, 1000);
+                        
+                        // Afficher arrivée
+                        const arrivalPhase = document.getElementById('arrivalPhase');
+                        arrivalPhase.style.display = 'block';
+                        setTimeout(() => arrivalPhase.scrollIntoView({behavior: 'smooth'}), 1500);
+                        
+                        alert('✅ EDL Départ validé !');
+                        
+                    } catch (error) {
+                        // Continuer même en cas d'erreur
+                        this.disabled = true;
+                        this.innerHTML = '✅ Validé';
+                        document.getElementById('arrivalPhase').style.display = 'block';
+                    }
+                });
             }
-        }
-        
-        // 2. OVERRIDE du bouton VALIDER DÉPART
-        const validateBtn = document.getElementById('validateDeparture');
-        if (validateBtn) {
-            validateBtn.addEventListener('click', function(e) {
-                setTimeout(hideCompletedDeparture, 1000);
-            });
-        }
-        
-        // 3. FIX FINALISER MISSION
-        const finalizeBtn = document.getElementById('finalizeMission');
-        if (finalizeBtn) {
-            finalizeBtn.onclick = null;
             
-            finalizeBtn.addEventListener('click', function(e) {
-                e.preventDefault();
+            // 3. FIX FINALISER MISSION
+            const finalizeBtn = document.getElementById('finalizeMission');
+            if (finalizeBtn) {
+                finalizeBtn.onclick = null;
+                finalizeBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    try {
+                        if (!window.departureValidated) {
+                            alert('❌ Validez d\'abord le départ');
+                            return;
+                        }
+                        
+                        const arrivalPhotos = document.querySelectorAll('#arrivalPhotos .photo-card.uploaded').length;
+                        if (arrivalPhotos < 3) {
+                            alert('❌ Il faut les 3 photos d\'arrivée');
+                            return;
+                        }
+                        
+                        window.missionCompleted = true;
+                        this.disabled = true;
+                        this.innerHTML = '🎉 Finalisée';
+                        this.style.background = '#10b981';
+                        
+                        // AFFICHER ÉCRAN DE COMPLETION
+                        setTimeout(() => {
+                            document.getElementById('missionDetails').style.display = 'none';
+                            
+                            let completionScreen = document.getElementById('completionScreen');
+                            if (!completionScreen) {
+                                completionScreen = document.createElement('div');
+                                completionScreen.id = 'completionScreen';
+                                completionScreen.innerHTML = `
+                                    <div style="background: white; border-radius: 12px; padding: 2rem; text-align: center; margin: 2rem auto; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border: 2px solid #10b981; max-width: 500px;">
+                                        <div style="font-size: 4rem; color: #10b981; margin-bottom: 1rem;">✅</div>
+                                        <h3 style="color: #10b981; font-size: 2rem; margin-bottom: 1rem;">Mission Finalisée !</h3>
+                                        <p style="color: #64748b; margin-bottom: 2rem;">La mission a été complétée avec succès.</p>
+                                        <button onclick="returnToHome()" style="background: #f97316; color: white; border: none; padding: 1rem 2rem; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer;">
+                                            🏠 Retour Accueil
+                                        </button>
+                                    </div>
+                                `;
+                                document.getElementById('prestataire').appendChild(completionScreen);
+                            }
+                            
+                            completionScreen.style.display = 'block';
+                            setTimeout(() => completionScreen.scrollIntoView({behavior: 'smooth'}), 500);
+                        }, 1000);
+                        
+                        alert('🎉 Mission finalisée !');
+                        
+                    } catch (error) {
+                        alert('❌ Erreur: ' + error.message);
+                    }
+                });
+            }
+            
+            // 4. FONCTION RETOUR ACCUEIL
+            window.returnToHome = function() {
+                window.departureValidated = false;
+                window.missionCompleted = false;
                 
-                const arrivalPhotos = document.querySelectorAll('#arrivalPhotos .photo-card.uploaded').length;
+                document.getElementById('completionScreen').style.display = 'none';
+                document.getElementById('missionDetails').style.display = 'none';
+                document.getElementById('accessForm').reset();
                 
-                if (arrivalPhotos < 3) {
-                    alert('❌ Il faut uploader les 3 photos d\'arrivée');
-                    return;
-                }
+                document.getElementById('departurePhase').style.display = 'block';
+                document.getElementById('arrivalPhase').style.display = 'none';
                 
-                // FINALISATION OK
-                this.disabled = true;
-                this.innerHTML = '🎉 Mission Finalisée';
-                
-                const completionScreen = document.getElementById('completionScreen');
-                if (completionScreen) {
-                    completionScreen.style.display = 'block';
-                    completionScreen.scrollIntoView({ behavior: 'smooth' });
-                }
-                
-                alert('🎉 Mission finalisée avec succès !');
-            });
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                alert('🔄 Retour accueil');
+            };
+            
+            console.log('✅ Patch final appliqué');
+            
+        } catch (error) {
+            console.error('❌ Erreur patch:', error);
         }
-        
-    } catch (error) {
-        console.error('❌ Erreur patch:', error);
-    }
-    
-}, 3000);
+    }, 2000);
+})();
 </script>
 
 </body>
 </html>
-
-
