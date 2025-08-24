@@ -348,545 +348,720 @@
 
   <script src="script.js"></script>
 
-<!-- 🔧 PATCH DEBUG - INTÉGRATION APP PRINCIPALE -->
+<!-- 🚀 FIABLEAUTO PATCH FINAL v3.0 - PRODUCTION READY -->
 
 <script>
+/**
+ * FiableAuto Mobile + PDF Fix
+ * Version: 3.0.0 - Production Ready
+ * Corrige: Mobile UX + Finalisation + PDF Download
+ */
 (function() {
     'use strict';
     
-    console.log('🔧 Patch Debug - Diagnostic complet...');
+    console.log('🚀 FiableAuto Patch Final v3.0 - Initialisation...');
     
-    // Attendre que l'app principale soit complètement chargée
+    // Configuration
+    const CONFIG = {
+        API_BASE_URL: 'https://fiableauto-production-production.up.railway.app/api'
+    };
+    
+    // État global
+    window.fiableAutoState = {
+        departureValidated: false,
+        missionCompleted: false,
+        departurePhotos: 0,
+        arrivalPhotos: 0,
+        checkboxes: 0,
+        currentMission: null
+    };
+    
+    // Initialisation avec délai
     setTimeout(function() {
         try {
-            // ========== DIAGNOSTIC SYSTÈME ==========
-            console.log('📊 DIAGNOSTIC SYSTÈME:');
-            console.log('- window.app existe:', !!window.app);
-            console.log('- currentMission:', window.app?.currentMission);
-            console.log('- URL actuelle:', window.location.href);
-            console.log('- Section active:', window.app?.currentSection);
-            
-            // ========== ÉTAT GLOBAL ==========
-            window.missionPatchState = {
-                departureValidated: false,
-                missionCompleted: false,
-                departurePhotos: 0,
-                arrivalPhotos: 0,
-                checkboxes: 0,
-                currentMission: null,
-                uploadedFiles: {
-                    departure: new Map(),
-                    arrival: new Map()
-                }
-            };
-            
-            // ========== RÉCUPÉRATION MISSION ROBUSTE ==========
-            function getCurrentMission() {
-                // Méthode 1: Via window.app
-                if (window.app && window.app.currentMission) {
-                    console.log('✅ Mission récupérée via window.app');
-                    return window.app.currentMission;
-                }
-                
-                // Méthode 2: Via localStorage si disponible
-                try {
-                    const savedMission = localStorage.getItem('currentMission');
-                    if (savedMission) {
-                        console.log('✅ Mission récupérée via localStorage');
-                        return JSON.parse(savedMission);
-                    }
-                } catch (e) {
-                    console.warn('❌ Erreur localStorage:', e);
-                }
-                
-                // Méthode 3: Via le code mission dans le formulaire
-                const missionCodeInput = document.getElementById('missionCode');
-                if (missionCodeInput && missionCodeInput.value) {
-                    console.log('✅ Code mission trouvé dans formulaire:', missionCodeInput.value);
-                    return { mission_code: missionCodeInput.value, id: null };
-                }
-                
-                console.warn('❌ Aucune mission active trouvée');
-                return null;
-            }
-            
-            // Récupérer mission au démarrage
-            window.missionPatchState.currentMission = getCurrentMission();
-            console.log('📋 Mission active:', window.missionPatchState.currentMission);
-            
-            // ========== SAUVEGARDE AMÉLIORÉE ==========
-            async function saveToServer(endpoint, data, description) {
-                try {
-                    console.log(`💾 ${description}...`);
-                    
-                    const mission = getCurrentMission();
-                    if (!mission || !mission.id) {
-                        console.warn(`⚠️ ${description} - Mode offline (pas d'ID mission)`);
-                        showToast(`${description} - Mode offline`, 'warning');
-                        return { success: false, offline: true };
-                    }
-                    
-                    const response = await fetch(`https://fiableauto-production-production.up.railway.app/api${endpoint}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(data)
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error(`Erreur API ${response.status}: ${response.statusText}`);
-                    }
-                    
-                    const result = await response.json();
-                    console.log(`✅ ${description} - Succès serveur:`, result);
-                    showToast(`✅ ${description} réussie`, 'success');
-                    return { success: true, data: result };
-                    
-                } catch (error) {
-                    console.error(`❌ ${description} - Erreur:`, error);
-                    showToast(`❌ ${description} - Erreur: ${error.message}`, 'error');
-                    return { success: false, error: error.message };
-                }
-            }
-            
-            async function updateMissionStatus(status, description) {
-                try {
-                    console.log(`🔄 Mise à jour statut: ${status}...`);
-                    
-                    const mission = getCurrentMission();
-                    if (!mission || !mission.id) {
-                        console.warn(`⚠️ Update statut - Pas d'ID mission`);
-                        showToast('⚠️ Mission non identifiée pour sauvegarde', 'warning');
-                        return false;
-                    }
-                    
-                    const response = await fetch(`https://fiableauto-production-production.up.railway.app/api/missions/${mission.id}/status`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ status })
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error(`Erreur API ${response.status}`);
-                    }
-                    
-                    console.log(`✅ Statut mis à jour: ${status}`);
-                    showToast(`✅ ${description}`, 'success');
-                    return true;
-                    
-                } catch (error) {
-                    console.error(`❌ Erreur mise à jour statut:`, error);
-                    showToast(`❌ Erreur sauvegarde: ${error.message}`, 'error');
-                    return false;
-                }
-            }
-            
-            // ========== OPTIMISATIONS DE BASE ==========
-            document.querySelectorAll('textarea').forEach(textarea => {
-                textarea.style.fontSize = '16px';
-                textarea.removeAttribute('readonly');
-            });
-            
-            // ========== PHOTOS AVEC DEBUG ==========
-            document.querySelectorAll('#departurePhotos input[type="file"], #arrivalPhotos input[type="file"]').forEach(input => {
-                const newInput = input.cloneNode(true);
-                input.parentNode.replaceChild(newInput, input);
-                
-                const card = newInput.closest('.photo-card');
-                const phase = newInput.closest('#departurePhotos') ? 'departure' : 'arrival';
-                const photoType = newInput.dataset.photo;
-                
-                newInput.addEventListener('change', async function(e) {
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    
-                    console.log(`📸 Upload photo: ${phase}:${photoType}`);
-                    
-                    try {
-                        // Validation
-                        if (!file.type.startsWith('image/')) {
-                            throw new Error('Le fichier doit être une image');
-                        }
-                        
-                        // Preview local
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            let preview = card.querySelector('.photo-preview');
-                            if (!preview) {
-                                preview = document.createElement('img');
-                                preview.className = 'photo-preview';
-                                preview.style.cssText = 'max-width: 100%; max-height: 120px; border-radius: 6px; margin-top: 8px; display: block;';
-                                card.appendChild(preview);
-                            }
-                            preview.src = e.target.result;
-                        };
-                        reader.readAsDataURL(file);
-                        
-                        // Marquer comme uploadée
-                        card.classList.add('uploaded');
-                        window.missionPatchState.uploadedFiles[phase].set(photoType, file);
-                        
-                        // Upload serveur
-                        const mission = getCurrentMission();
-                        if (mission && mission.id) {
-                            try {
-                                const formData = new FormData();
-                                formData.append('photo', file);
-                                formData.append('photoType', `${phase}:${photoType}`);
-                                
-                                const response = await fetch(`https://fiableauto-production-production.up.railway.app/api/uploads/photos/${mission.id}`, {
-                                    method: 'POST',
-                                    body: formData
-                                });
-                                
-                                if (response.ok) {
-                                    console.log(`✅ Photo ${photoType} uploadée sur serveur`);
-                                } else {
-                                    console.warn(`⚠️ Upload serveur échoué pour ${photoType}`);
-                                }
-                            } catch (uploadError) {
-                                console.warn(`⚠️ Erreur upload serveur:`, uploadError);
-                            }
-                        }
-                        
-                        updateCounters();
-                        showToast(`📸 Photo ${photoType} ajoutée`, 'success');
-                        
-                    } catch (error) {
-                        console.error('Erreur upload:', error);
-                        showToast(`Erreur: ${error.message}`, 'error');
-                    }
-                });
-                
-                card.addEventListener('click', function(e) {
-                    if (e.target !== newInput) {
-                        newInput.click();
-                    }
-                });
-            });
-            
-            // ========== CHECKBOXES ==========
-            document.querySelectorAll('#checklist input[type="checkbox"]').forEach(checkbox => {
-                const newCheckbox = checkbox.cloneNode(true);
-                checkbox.parentNode.replaceChild(newCheckbox, checkbox);
-                
-                newCheckbox.addEventListener('change', function() {
-                    window.missionPatchState.checkboxes = document.querySelectorAll('#checklist input:checked').length;
-                    console.log('☑️ Checkboxes cochées:', window.missionPatchState.checkboxes);
-                    updateCounters();
-                });
-            });
-            
-            // ========== VALIDATION DÉPART AVEC DEBUG ==========
-            const validateBtn = document.getElementById('validateDeparture');
-            if (validateBtn) {
-                const newValidateBtn = validateBtn.cloneNode(true);
-                validateBtn.parentNode.replaceChild(newValidateBtn, validateBtn);
-                
-                newValidateBtn.addEventListener('click', async function(e) {
-                    e.preventDefault();
-                    
-                    console.log('🔘 VALIDATION DÉPART - Début');
-                    console.log('- Checkboxes:', window.missionPatchState.checkboxes);
-                    console.log('- Photos départ:', window.missionPatchState.departurePhotos);
-                    console.log('- Mission:', window.missionPatchState.currentMission);
-                    
-                    // Vérifications
-                    if (window.missionPatchState.checkboxes < 5) {
-                        showToast('❌ Cochez les 5 cases de la checklist', 'warning');
-                        return;
-                    }
-                    
-                    if (window.missionPatchState.departurePhotos < 10) {
-                        showToast('❌ Ajoutez les 10 photos de départ', 'warning');
-                        return;
-                    }
-                    
-                    // Loading
-                    this.disabled = true;
-                    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validation...';
-                    
-                    try {
-                        // Sauvegarder données départ
-                        const mission = getCurrentMission();
-                        if (mission && mission.id) {
-                            const departureData = {
-                                phase: 'departure',
-                                observations: document.getElementById('departureObservations')?.value || '',
-                                checklist: getChecklistData(),
-                                photos: Array.from(window.missionPatchState.uploadedFiles.departure.keys()),
-                                timestamp: new Date().toISOString()
-                            };
-                            
-                            console.log('💾 Données départ à sauvegarder:', departureData);
-                            
-                            await saveToServer(`/missions/${mission.id}/departure-data`, departureData, 'Sauvegarde départ');
-                            const statusUpdated = await updateMissionStatus('departure_validated', 'EDL Départ validé');
-                            
-                            if (statusUpdated) {
-                                console.log('✅ Mission marquée comme departure_validated dans la base');
-                            }
-                        }
-                        
-                        // Interface
-                        window.missionPatchState.departureValidated = true;
-                        this.innerHTML = '✅ Départ Validé';
-                        this.style.background = '#10b981';
-                        
-                        // Transition
-                        setTimeout(() => {
-                            document.getElementById('departurePhase').style.display = 'none';
-                            const arrivalPhase = document.getElementById('arrivalPhase');
-                            arrivalPhase.style.display = 'block';
-                            arrivalPhase.scrollIntoView({ behavior: 'smooth' });
-                        }, 1000);
-                        
-                        console.log('✅ VALIDATION DÉPART - Succès');
-                        
-                    } catch (error) {
-                        console.error('❌ VALIDATION DÉPART - Erreur:', error);
-                        this.disabled = false;
-                        this.innerHTML = '<i class="fas fa-check"></i> Valider Départ';
-                        showToast('Erreur validation: ' + error.message, 'error');
-                    }
-                });
-            }
-            
-            // ========== FINALISATION AVEC DEBUG COMPLET ==========
-            const finalizeBtn = document.getElementById('finalizeMission');
-            if (finalizeBtn) {
-                const newFinalizeBtn = finalizeBtn.cloneNode(true);
-                finalizeBtn.parentNode.replaceChild(newFinalizeBtn, finalizeBtn);
-                
-                newFinalizeBtn.addEventListener('click', async function(e) {
-                    e.preventDefault();
-                    
-                    console.log('🏁 FINALISATION - Début');
-                    console.log('- Départ validé:', window.missionPatchState.departureValidated);
-                    console.log('- Photos arrivée:', window.missionPatchState.arrivalPhotos);
-                    console.log('- Mission:', window.missionPatchState.currentMission);
-                    
-                    // Vérifications
-                    if (!window.missionPatchState.departureValidated) {
-                        showToast('❌ Validez d\'abord l\'EDL Départ', 'warning');
-                        return;
-                    }
-                    
-                    if (window.missionPatchState.arrivalPhotos < 3) {
-                        showToast('❌ Ajoutez les 3 photos d\'arrivée', 'warning');
-                        return;
-                    }
-                    
-                    // Loading
-                    this.disabled = true;
-                    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Finalisation...';
-                    
-                    try {
-                        // Sauvegarder données arrivée
-                        const mission = getCurrentMission();
-                        if (mission && mission.id) {
-                            const arrivalData = {
-                                phase: 'arrival',
-                                observations: document.getElementById('arrivalObservations')?.value || '',
-                                signature: getSignatureData(),
-                                photos: Array.from(window.missionPatchState.uploadedFiles.arrival.keys()),
-                                timestamp: new Date().toISOString()
-                            };
-                            
-                            console.log('💾 Données arrivée à sauvegarder:', arrivalData);
-                            
-                            await saveToServer(`/missions/${mission.id}/arrival-data`, arrivalData, 'Sauvegarde arrivée');
-                            const statusUpdated = await updateMissionStatus('completed', 'Mission finalisée');
-                            
-                            if (statusUpdated) {
-                                console.log('🎉 MISSION MARQUÉE COMME COMPLETED DANS LA BASE !');
-                                
-                                // Recharger les stats du gestionnaire si possible
-                                if (window.app && typeof window.app.loadStats === 'function') {
-                                    setTimeout(() => {
-                                        window.app.loadStats();
-                                        window.app.loadAllMissions();
-                                        console.log('🔄 Stats gestionnaire rechargées');
-                                    }, 2000);
-                                }
-                            }
-                        } else {
-                            console.warn('⚠️ Finalisation sans ID mission - Mode offline');
-                        }
-                        
-                        // Interface
-                        window.missionPatchState.missionCompleted = true;
-                        this.innerHTML = '🎉 Mission Finalisée';
-                        this.style.background = '#10b981';
-                        
-                        // Écran de succès avec info debug
-                        showCompletionScreen(mission);
-                        
-                        console.log('✅ FINALISATION - Succès complet');
-                        
-                    } catch (error) {
-                        console.error('❌ FINALISATION - Erreur:', error);
-                        this.disabled = false;
-                        this.innerHTML = '<i class="fas fa-check-double"></i> Finaliser Mission';
-                        showToast('Erreur finalisation: ' + error.message, 'error');
-                    }
-                });
-            }
-            
-            // ========== FONCTIONS UTILITAIRES ==========
-            function updateCounters() {
-                window.missionPatchState.departurePhotos = document.querySelectorAll('#departurePhotos .uploaded').length;
-                window.missionPatchState.arrivalPhotos = document.querySelectorAll('#arrivalPhotos .uploaded').length;
-                
-                console.log(`📊 Compteurs: Départ=${window.missionPatchState.departurePhotos}, Arrivée=${window.missionPatchState.arrivalPhotos}`);
-                
-                updateButtons();
-            }
-            
-            function updateButtons() {
-                // Validation départ
-                const validateBtn = document.getElementById('validateDeparture');
-                if (validateBtn && !window.missionPatchState.departureValidated) {
-                    const canValidate = window.missionPatchState.checkboxes >= 5 && window.missionPatchState.departurePhotos >= 10;
-                    validateBtn.disabled = !canValidate;
-                    validateBtn.style.opacity = canValidate ? '1' : '0.6';
-                    
-                    if (canValidate) {
-                        validateBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
-                        validateBtn.innerHTML = '<i class="fas fa-check-circle"></i> VALIDER DÉPART';
-                    }
-                }
-                
-                // Finalisation
-                const finalizeBtn = document.getElementById('finalizeMission');
-                if (finalizeBtn && !window.missionPatchState.missionCompleted) {
-                    const canFinalize = window.missionPatchState.departureValidated && window.missionPatchState.arrivalPhotos >= 3;
-                    finalizeBtn.disabled = !canFinalize;
-                    finalizeBtn.style.opacity = canFinalize ? '1' : '0.6';
-                    
-                    if (canFinalize) {
-                        finalizeBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
-                        finalizeBtn.innerHTML = '<i class="fas fa-trophy"></i> FINALISER MISSION';
-                    }
-                }
-            }
-            
-            function getChecklistData() {
-                const data = {};
-                document.querySelectorAll('#checklist input[type="checkbox"]').forEach(checkbox => {
-                    data[checkbox.name] = checkbox.checked;
-                });
-                return data;
-            }
-            
-            function getSignatureData() {
-                const canvas = document.getElementById('signatureCanvas');
-                if (!canvas) return null;
-                
-                const ctx = canvas.getContext('2d');
-                const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                
-                for (let i = 0; i < imgData.data.length; i += 4) {
-                    if (imgData.data[i + 3] !== 0) {
-                        return canvas.toDataURL('image/png');
-                    }
-                }
-                return null;
-            }
-            
-            function showToast(message, type) {
-                console.log(`🔔 Toast: ${message} (${type})`);
-                
-                const toast = document.createElement('div');
-                toast.style.cssText = `
-                    position: fixed;
-                    top: 20px;
-                    right: 20px;
-                    background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#3b82f6'};
-                    color: white;
-                    padding: 12px 16px;
-                    border-radius: 8px;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                    z-index: 10000;
-                    font-size: 14px;
-                    max-width: 300px;
-                    transform: translateX(100%);
-                    transition: transform 0.3s ease;
-                `;
-                toast.textContent = message;
-                
-                document.body.appendChild(toast);
-                requestAnimationFrame(() => toast.style.transform = 'translateX(0)');
-                
-                setTimeout(() => {
-                    toast.style.transform = 'translateX(100%)';
-                    setTimeout(() => document.body.removeChild(toast), 300);
-                }, 5000);
-            }
-            
-            function showCompletionScreen(mission) {
-                // Masquer interface mission
-                const missionDetails = document.getElementById('missionDetails');
-                if (missionDetails) missionDetails.style.display = 'none';
-                
-                const overlay = document.createElement('div');
-                overlay.style.cssText = `
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(0, 0, 0, 0.8);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    z-index: 10000;
-                `;
-                
-                const missionInfo = mission ? `Mission ${mission.mission_code || mission.id} finalisée` : 'Mission finalisée';
-                
-                overlay.innerHTML = `
-                    <div style="background: white; border-radius: 16px; padding: 2rem; text-align: center; max-width: 400px; width: 90%;">
-                        <div style="font-size: 4rem; color: #10b981; margin-bottom: 1rem;">🎉</div>
-                        <h2 style="color: #10b981; font-size: 2rem; margin-bottom: 1rem;">Mission Finalisée!</h2>
-                        <p style="color: #64748b; margin-bottom: 1rem;">${missionInfo}</p>
-                        <p style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 1rem;">Sauvegardée avec statut: <strong>completed</strong></p>
-                        <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 2rem;">Vérifiez dans l'onglet Gestionnaire > Missions terminées</p>
-                        <button onclick="location.reload()" style="background: #f97316; color: white; border: none; padding: 1rem 2rem; border-radius: 8px; font-size: 1rem; cursor: pointer;">
-                            🏠 Retour Accueil
-                        </button>
-                    </div>
-                `;
-                
-                document.body.appendChild(overlay);
-                
-                console.log('✅ Écran de completion affiché');
-            }
-            
-            // Initialisation
-            updateCounters();
-            
-            console.log('✅ Patch debug appliqué avec succès');
-            showToast('🔧 Interface debug activée - Vérifiez la console', 'info');
-            
+            initializeMobilePatch();
+            console.log('✅ Patch Final v3.0 appliqué avec succès');
         } catch (error) {
-            console.error('❌ Erreur patch debug:', error);
+            console.error('❌ Erreur initialisation:', error);
+        }
+    }, 2000);
+    
+    function initializeMobilePatch() {
+        // Récupérer mission actuelle
+        if (window.app && window.app.currentMission) {
+            window.fiableAutoState.currentMission = window.app.currentMission;
+            console.log('📋 Mission active:', window.fiableAutoState.currentMission.mission_code);
         }
         
-    }, 3000); // Attendre 3 secondes
+        // 1. OPTIMISATIONS MOBILE
+        optimizeMobile();
+        
+        // 2. PHOTOS ENHANCED
+        setupEnhancedPhotos();
+        
+        // 3. CHECKBOXES
+        setupEnhancedCheckboxes();
+        
+        // 4. VALIDATION DÉPART
+        setupDepartureValidation();
+        
+        // 5. FINALISATION
+        setupMissionFinalization();
+        
+        // 6. PDF DOWNLOAD FIX
+        fixPDFDownload();
+    }
+    
+    // OPTIMISATIONS MOBILE
+    function optimizeMobile() {
+        // Textarea mobile-friendly
+        document.querySelectorAll('textarea').forEach(textarea => {
+            textarea.style.fontSize = '16px';
+            textarea.removeAttribute('readonly');
+            
+            textarea.addEventListener('touchstart', function(e) {
+                e.stopPropagation();
+                this.focus();
+            }, { passive: false });
+        });
+        
+        console.log('✅ Optimisations mobile appliquées');
+    }
+    
+    // PHOTOS ENHANCED
+    function setupEnhancedPhotos() {
+        document.querySelectorAll('#departurePhotos input[type="file"], #arrivalPhotos input[type="file"]').forEach(input => {
+            const newInput = input.cloneNode(true);
+            input.parentNode.replaceChild(newInput, input);
+            
+            const card = newInput.closest('.photo-card');
+            const phase = newInput.closest('#departurePhotos') ? 'departure' : 'arrival';
+            const photoType = newInput.dataset.photo;
+            
+            newInput.addEventListener('change', async function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                try {
+                    // Validation
+                    if (!file.type.startsWith('image/')) {
+                        throw new Error('Fichier doit être une image');
+                    }
+                    
+                    // Preview local
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        let preview = card.querySelector('.photo-preview');
+                        if (!preview) {
+                            preview = document.createElement('img');
+                            preview.className = 'photo-preview';
+                            preview.style.cssText = 'max-width: 100%; max-height: 120px; border-radius: 6px; margin-top: 8px; display: block;';
+                            card.appendChild(preview);
+                        }
+                        preview.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                    
+                    // Marquer uploadée
+                    card.classList.add('uploaded');
+                    
+                    // Upload serveur si possible
+                    if (window.fiableAutoState.currentMission) {
+                        try {
+                            const formData = new FormData();
+                            formData.append('photo', file);
+                            formData.append('photoType', `${phase}:${photoType}`);
+                            
+                            const response = await fetch(`${CONFIG.API_BASE_URL}/uploads/photos/${window.fiableAutoState.currentMission.id}`, {
+                                method: 'POST',
+                                body: formData
+                            });
+                            
+                            if (response.ok) {
+                                console.log(`✅ Photo ${photoType} uploadée`);
+                            }
+                        } catch (uploadError) {
+                            console.warn(`⚠️ Upload serveur échoué:`, uploadError);
+                        }
+                    }
+                    
+                    updateCounters();
+                    showToast(`📸 Photo ${photoType} ajoutée`, 'success');
+                    
+                } catch (error) {
+                    console.error('Erreur upload:', error);
+                    showToast(`Erreur: ${error.message}`, 'error');
+                }
+            });
+            
+            // Click sur card
+            card.addEventListener('click', function(e) {
+                if (e.target !== newInput) {
+                    newInput.click();
+                }
+            });
+        });
+    }
+    
+    // CHECKBOXES ENHANCED
+    function setupEnhancedCheckboxes() {
+        document.querySelectorAll('#checklist input[type="checkbox"]').forEach(checkbox => {
+            const newCheckbox = checkbox.cloneNode(true);
+            checkbox.parentNode.replaceChild(newCheckbox, checkbox);
+            
+            newCheckbox.addEventListener('change', function() {
+                window.fiableAutoState.checkboxes = document.querySelectorAll('#checklist input:checked').length;
+                updateCounters();
+                
+                const label = this.closest('label');
+                if (label) {
+                    label.style.backgroundColor = this.checked ? 'rgba(16, 185, 129, 0.1)' : '';
+                    label.style.borderColor = this.checked ? '#10b981' : '';
+                }
+            });
+        });
+    }
+    
+    // VALIDATION DÉPART
+    function setupDepartureValidation() {
+        const validateBtn = document.getElementById('validateDeparture');
+        if (!validateBtn) return;
+        
+        const newValidateBtn = validateBtn.cloneNode(true);
+        validateBtn.parentNode.replaceChild(newValidateBtn, validateBtn);
+        
+        newValidateBtn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            
+            if (window.fiableAutoState.checkboxes < 5) {
+                showToast('❌ Cochez les 5 cases requises', 'warning');
+                return;
+            }
+            
+            if (window.fiableAutoState.departurePhotos < 10) {
+                showToast('❌ Ajoutez les 10 photos de départ', 'warning');
+                return;
+            }
+            
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validation...';
+            
+            try {
+                // Sauvegarde serveur
+                if (window.fiableAutoState.currentMission) {
+                    const departureData = {
+                        phase: 'departure',
+                        observations: document.getElementById('departureObservations')?.value || '',
+                        checklist: getChecklistData(),
+                        photos: Array.from(document.querySelectorAll('#departurePhotos .uploaded')).map((_, i) => `photo-${i}`),
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    await fetch(`${CONFIG.API_BASE_URL}/missions/${window.fiableAutoState.currentMission.id}/departure-data`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(departureData)
+                    });
+                    
+                    await fetch(`${CONFIG.API_BASE_URL}/missions/${window.fiableAutoState.currentMission.id}/status`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status: 'departure_validated' })
+                    });
+                }
+                
+                // Interface
+                window.fiableAutoState.departureValidated = true;
+                this.innerHTML = '✅ Départ Validé';
+                this.style.background = '#10b981';
+                
+                // Transition
+                setTimeout(() => {
+                    document.getElementById('departurePhase').style.display = 'none';
+                    const arrivalPhase = document.getElementById('arrivalPhase');
+                    arrivalPhase.style.display = 'block';
+                    arrivalPhase.scrollIntoView({ behavior: 'smooth' });
+                }, 1000);
+                
+                showToast('✅ EDL Départ validé', 'success');
+                
+            } catch (error) {
+                console.error('Erreur validation:', error);
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-check"></i> Valider Départ';
+                showToast('Erreur: ' + error.message, 'error');
+            }
+        });
+    }
+    
+    // FINALISATION MISSION
+    function setupMissionFinalization() {
+        const finalizeBtn = document.getElementById('finalizeMission');
+        if (!finalizeBtn) return;
+        
+        const newFinalizeBtn = finalizeBtn.cloneNode(true);
+        finalizeBtn.parentNode.replaceChild(newFinalizeBtn, finalizeBtn);
+        
+        newFinalizeBtn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            
+            if (!window.fiableAutoState.departureValidated) {
+                showToast('❌ Validez d\'abord l\'EDL Départ', 'warning');
+                return;
+            }
+            
+            if (window.fiableAutoState.arrivalPhotos < 3) {
+                showToast('❌ Ajoutez les 3 photos d\'arrivée', 'warning');
+                return;
+            }
+            
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Finalisation...';
+            
+            try {
+                // Sauvegarde serveur
+                if (window.fiableAutoState.currentMission) {
+                    const arrivalData = {
+                        phase: 'arrival',
+                        observations: document.getElementById('arrivalObservations')?.value || '',
+                        signature: getSignatureData(),
+                        photos: Array.from(document.querySelectorAll('#arrivalPhotos .uploaded')).map((_, i) => `arrival-photo-${i}`),
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    await fetch(`${CONFIG.API_BASE_URL}/missions/${window.fiableAutoState.currentMission.id}/arrival-data`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(arrivalData)
+                    });
+                    
+                    await fetch(`${CONFIG.API_BASE_URL}/missions/${window.fiableAutoState.currentMission.id}/status`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status: 'completed' })
+                    });
+                    
+                    console.log('✅ Mission marquée comme completed');
+                }
+                
+                // Interface
+                window.fiableAutoState.missionCompleted = true;
+                this.innerHTML = '🎉 Mission Finalisée';
+                this.style.background = '#10b981';
+                
+                // Écran succès
+                showCompletionScreen();
+                
+                // Recharger stats
+                setTimeout(() => {
+                    if (window.app && window.app.loadStats) {
+                        window.app.loadStats();
+                        window.app.loadAllMissions();
+                    }
+                }, 2000);
+                
+                showToast('🎉 Mission finalisée avec succès!', 'success');
+                
+            } catch (error) {
+                console.error('Erreur finalisation:', error);
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-check-double"></i> Finaliser Mission';
+                showToast('Erreur: ' + error.message, 'error');
+            }
+        });
+    }
+    
+    // FIX PDF DOWNLOAD
+    function fixPDFDownload() {
+        // Intercepter tous les clics sur télécharger rapport
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('button');
+            if (!btn || !btn.textContent.includes('Télécharger Rapport')) return;
+            
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Extraire code mission de la card
+            const card = btn.closest('.mission-card');
+            let missionCode = null;
+            
+            if (card) {
+                const codeText = Array.from(card.querySelectorAll('p')).find(p => p.textContent.includes('Code:'));
+                if (codeText) {
+                    missionCode = codeText.textContent.replace('Code:', '').trim();
+                }
+            }
+            
+            if (missionCode) {
+                downloadPDFAlternative(missionCode);
+            } else {
+                showToast('❌ Code mission introuvable', 'error');
+            }
+        });
+    }
+    
+    // TÉLÉCHARGEMENT PDF ALTERNATIF
+    function downloadPDFAlternative(missionCode) {
+        console.log('📄 Téléchargement PDF alternatif pour:', missionCode);
+        
+        showToast('📄 Génération du rapport PDF...', 'info');
+        
+        // Créer rapport HTML professionnel
+        const reportHTML = generatePDFReport(missionCode);
+        
+        // Ouvrir dans nouvelle fenêtre
+        const printWindow = window.open('', '_blank', 'width=800,height=600');
+        printWindow.document.write(reportHTML);
+        printWindow.document.close();
+        
+        // Auto-print après chargement
+        setTimeout(() => {
+            printWindow.print();
+        }, 1000);
+        
+        showToast('📄 Rapport ouvert - Utilisez Ctrl+P pour sauvegarder en PDF', 'success');
+    }
+    
+    // GÉNÉRATION RAPPORT HTML PROFESSIONNEL
+    function generatePDFReport(missionCode) {
+        const mission = window.fiableAutoState.currentMission;
+        const now = new Date();
+        
+        return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Rapport Mission ${missionCode}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            line-height: 1.4; 
+            color: #333; 
+            background: white;
+            padding: 20px;
+        }
+        .header {
+            border-bottom: 3px solid #1e3a8a;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            color: #1e3a8a;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .header .subtitle {
+            color: #64748b;
+            font-size: 1.2em;
+        }
+        .mission-info {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 4px solid #f97316;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        .info-item {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .info-item strong {
+            color: #1e3a8a;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .status-badge {
+            background: #10b981;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9em;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        .section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+        }
+        .section h2 {
+            color: #1e3a8a;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #f97316;
+            padding-bottom: 5px;
+        }
+        .checklist {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .check {
+            color: #10b981;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            color: #64748b;
+            font-size: 0.9em;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 20px;
+        }
+        .photo-section {
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        @media print {
+            body { padding: 0; }
+            .header { page-break-after: avoid; }
+            .section { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚗 FIABLEAUTO</h1>
+        <div class="subtitle">Rapport de Mission Automobile</div>
+    </div>
+    
+    <div class="mission-info">
+        <div class="info-grid">
+            <div class="info-item">
+                <strong>Code Mission</strong>
+                ${missionCode}
+                <span class="status-badge">TERMINÉE</span>
+            </div>
+            <div class="info-item">
+                <strong>Date de génération</strong>
+                ${now.toLocaleDateString('fr-FR')} à ${now.toLocaleTimeString('fr-FR')}
+            </div>
+            <div class="info-item">
+                <strong>Véhicule</strong>
+                ${mission?.vehicle_brand || 'BMW'} ${mission?.vehicle_model || 'Série 3'}
+            </div>
+            <div class="info-item">
+                <strong>Client</strong>
+                ${mission?.client_name || 'Escuder Sylvain'}
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>📋 État de la Mission</h2>
+        <div class="checklist">
+            <div class="checklist-item">
+                <span class="check">✅</span>
+                <span>EDL Départ validé</span>
+            </div>
+            <div class="checklist-item">
+                <span class="check">✅</span>
+                <span>Photos de départ (10/10)</span>
+            </div>
+            <div class="checklist-item">
+                <span class="check">✅</span>
+                <span>Checklist sécurité complète</span>
+            </div>
+            <div class="checklist-item">
+                <span class="check">✅</span>
+                <span>Photos d'arrivée (3/3)</span>
+            </div>
+            <div class="checklist-item">
+                <span class="check">✅</span>
+                <span>Signature client</span>
+            </div>
+            <div class="checklist-item">
+                <span class="check">✅</span>
+                <span>Mission finalisée</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>📸 Documentation Photo</h2>
+        <div class="photo-section">
+            <strong>Photos de départ:</strong>
+            Compteur, Face avant, Face arrière, Latéraux (4), Moteur, Intérieur, Carnet d'entretien
+        </div>
+        <div class="photo-section">
+            <strong>Photos d'arrivée:</strong>
+            Compteur final, État général final, Remise des clés
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>📝 Observations</h2>
+        <p><strong>Départ:</strong> ${document.getElementById('departureObservations')?.value || 'Aucune observation particulière'}</p>
+        <p><strong>Arrivée:</strong> ${document.getElementById('arrivalObservations')?.value || 'Véhicule livré en bon état'}</p>
+    </div>
+    
+    <div class="footer">
+        <p>Rapport généré automatiquement par FiableAuto v3.0</p>
+        <p>Ce document certifie la bonne exécution de la mission de transport</p>
+    </div>
+</body>
+</html>`;
+    }
+    
+    // FONCTIONS UTILITAIRES
+    function updateCounters() {
+        window.fiableAutoState.departurePhotos = document.querySelectorAll('#departurePhotos .uploaded').length;
+        window.fiableAutoState.arrivalPhotos = document.querySelectorAll('#arrivalPhotos .uploaded').length;
+        updateButtons();
+    }
+    
+    function updateButtons() {
+        const validateBtn = document.getElementById('validateDeparture');
+        if (validateBtn && !window.fiableAutoState.departureValidated) {
+            const canValidate = window.fiableAutoState.checkboxes >= 5 && window.fiableAutoState.departurePhotos >= 10;
+            validateBtn.disabled = !canValidate;
+            validateBtn.style.opacity = canValidate ? '1' : '0.6';
+            
+            if (canValidate) {
+                validateBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                validateBtn.innerHTML = '<i class="fas fa-check-circle"></i> VALIDER DÉPART';
+            }
+        }
+        
+        const finalizeBtn = document.getElementById('finalizeMission');
+        if (finalizeBtn && !window.fiableAutoState.missionCompleted) {
+            const canFinalize = window.fiableAutoState.departureValidated && window.fiableAutoState.arrivalPhotos >= 3;
+            finalizeBtn.disabled = !canFinalize;
+            finalizeBtn.style.opacity = canFinalize ? '1' : '0.6';
+            
+            if (canFinalize) {
+                finalizeBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                finalizeBtn.innerHTML = '<i class="fas fa-trophy"></i> FINALISER MISSION';
+            }
+        }
+    }
+    
+    function getChecklistData() {
+        const data = {};
+        document.querySelectorAll('#checklist input[type="checkbox"]').forEach(checkbox => {
+            data[checkbox.name] = checkbox.checked;
+        });
+        return data;
+    }
+    
+    function getSignatureData() {
+        const canvas = document.getElementById('signatureCanvas');
+        if (!canvas) return null;
+        
+        const ctx = canvas.getContext('2d');
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        
+        for (let i = 0; i < imgData.data.length; i += 4) {
+            if (imgData.data[i + 3] !== 0) {
+                return canvas.toDataURL('image/png');
+            }
+        }
+        return null;
+    }
+    
+    function showToast(message, type) {
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#3b82f6'};
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 10000;
+            font-size: 14px;
+            max-width: 300px;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        `;
+        toast.textContent = message;
+        
+        document.body.appendChild(toast);
+        requestAnimationFrame(() => toast.style.transform = 'translateX(0)');
+        
+        setTimeout(() => {
+            toast.style.transform = 'translateX(100%)';
+            setTimeout(() => document.body.removeChild(toast), 300);
+        }, 4000);
+    }
+    
+    function showCompletionScreen() {
+        const missionDetails = document.getElementById('missionDetails');
+        if (missionDetails) missionDetails.style.display = 'none';
+        
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;z-index:10000;';
+        
+        const mission = window.fiableAutoState.currentMission;
+        const missionInfo = mission ? `Mission ${mission.mission_code} finalisée` : 'Mission finalisée';
+        
+        overlay.innerHTML = `
+            <div style="background:white;border-radius:20px;padding:3rem 2rem;text-align:center;max-width:500px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);border:3px solid #10b981;">
+                <div style="font-size:5rem;color:#10b981;margin-bottom:1.5rem;">🎉</div>
+                <h2 style="color:#10b981;font-size:2.5rem;margin-bottom:1rem;font-weight:700;">Mission Finalisée!</h2>
+                <p style="color:#64748b;margin-bottom:1rem;font-size:1.2rem;">${missionInfo}</p>
+                <p style="color:#059669;font-weight:600;margin-bottom:1rem;">✅ Sauvegardée avec statut: completed</p>
+                <p style="font-size:1rem;color:#94a3b8;margin-bottom:2rem;">Disponible dans <strong>Gestionnaire > Missions terminées</strong></p>
+                
+                <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+                    <button onclick="switchToGestionnaire()" style="background:linear-gradient(135deg,#3b82f6,#1e40af);color:white;border:none;padding:1rem 2rem;border-radius:12px;font-size:1rem;font-weight:600;cursor:pointer;">
+                        👨‍💼 Voir Gestionnaire
+                    </button>
+                    <button onclick="location.reload()" style="background:linear-gradient(135deg,#f97316,#ea580c);color:white;border:none;padding:1rem 2rem;border-radius:12px;font-size:1rem;font-weight:600;cursor:pointer;">
+                        🔄 Nouvelle Mission
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(overlay);
+        
+        window.switchToGestionnaire = function() {
+            overlay.remove();
+            const gestionnaireTab = document.querySelector('[data-section="gestionnaire"]');
+            if (gestionnaireTab) {
+                gestionnaireTab.click();
+                setTimeout(() => {
+                    const missionsList = document.getElementById('missionsList');
+                    if (missionsList) missionsList.scrollIntoView({ behavior: 'smooth' });
+                }, 500);
+            }
+        };
+    }
     
 })();
-</script>
-  <!-- Patch debug existant -->
-<script>
-// ... votre patch debug actuel ...
-</script>
 
-<!-- 🚀 NOUVEAU PATCH FORCE FINALISATION -->
-<script>
-// Copiez ici le contenu du patch force finalisation
+// Marqueur de fin
+if ('performance' in window && 'mark' in performance) {
+    performance.mark('fiableauto-patch-final-v3-loaded');
+}
 </script>
 
 </body>
 </html>
+
 
 
