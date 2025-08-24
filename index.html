@@ -1,4 +1,74 @@
-<!-- PRESTATAIRE -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FiableAuto – Web App</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body data-theme="light">
+  <header>
+    <h1>🚗 FiableAuto</h1>
+  </header>
+
+  <!-- Navigation -->
+  <nav class="nav">
+    <button class="nav-pill active" data-section="gestionnaire"><i class="fas fa-user-tie"></i> Gestionnaire</button>
+    <button class="nav-pill" data-section="prestataire"><i class="fas fa-user-cog"></i> Prestataire</button>
+    <button class="nav-pill" data-section="client"><i class="fas fa-user"></i> Client</button>
+  </nav>
+
+  <!-- GESTIONNAIRE -->
+  <section id="gestionnaire" class="section active">
+    <!-- Stats Dashboard -->
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h3 id="totalMissions">0</h3>
+          <p>Missions créées</p>
+        </div>
+        <div class="stat-card">
+          <h3 id="pendingMissions">0</h3>
+          <p>En attente</p>
+        </div>
+        <div class="stat-card">
+          <h3 id="progressMissions">0</h3>
+          <p>En cours</p>
+        </div>
+        <div class="stat-card">
+          <h3 id="completedMissions">0</h3>
+          <p>Terminées</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <h2>Créer une mission</h2>
+      <form id="missionForm" class="enhanced-form">
+        <div class="form-grid">
+          <input type="text" name="vehicleBrand" placeholder="Marque" required>
+          <input type="text" name="vehicleModel" placeholder="Modèle" required>
+          <input type="number" name="vehicleYear" placeholder="Année">
+          <input type="text" name="licensePlate" placeholder="Immatriculation">
+          <input type="number" name="mileage" placeholder="Kilométrage">
+          <input type="text" name="pickupLocation" placeholder="Lieu prise en charge" required>
+          <input type="text" name="deliveryLocation" placeholder="Lieu livraison" required>
+          <input type="date" name="pickupDate">
+          <input type="date" name="deliveryDate">
+          <input type="text" name="clientName" placeholder="Nom client" required>
+          <input type="email" name="clientEmail" placeholder="Email client" required>
+          <input type="text" name="clientPhone" placeholder="Téléphone client">
+        </div>
+        <button type="submit" class="btn-enhanced btn-primary">Créer mission</button>
+      </form>
+
+      <h3>Missions archivées</h3>
+      <div id="missionsList"></div>
+    </div>
+  </section>
+
+  <!-- PRESTATAIRE -->
   <section id="prestataire" class="section">
     <div class="container">
       <h2>Accéder à une mission</h2>
@@ -168,275 +238,52 @@
         </div>
       </div>
     </div>
-  </section><!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FiableAuto – Web App</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-</head>
-<body data-theme="light">
-  <header>
-    <h1>🚗 FiableAuto</h1>
-  </header>
-
-  <!-- Navigation -->
-  <nav class="nav">
-    <button class="nav-pill active" data-section="gestionnaire"><i class="fas fa-user-tie"></i> Gestionnaire</button>
-    <button class="nav-pill" data-section="prestataire"><i class="fas fa-user-cog"></i> Prestataire</button>
-    <button class="nav-pill" data-section="client"><i class="fas fa-user"></i> Client</button>
-  </nav>
-
-  <!-- GESTIONNAIRE -->
-  <section id="gestionnaire" class="section active">
-    <!-- Stats Dashboard -->
-    <div class="container">
-      <div class="stats-grid">
-        <div class="stat-card">
-          <h3 id="totalMissions">0</h3>
-          <p>Missions créées</p>
-        </div>
-        <div class="stat-card">
-          <h3 id="pendingMissions">0</h3>
-          <p>En attente</p>
-        </div>
-        <div class="stat-card">
-          <h3 id="progressMissions">0</h3>
-          <p>En cours</p>
-        </div>
-        <div class="stat-card">
-          <h3 id="completedMissions">0</h3>
-          <p>Terminées</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="container">
-      <h2>Créer une mission</h2>
-      <form id="missionForm" class="enhanced-form">
-        <div class="form-grid">
-          <input type="text" name="vehicleBrand" placeholder="Marque" required>
-          <input type="text" name="vehicleModel" placeholder="Modèle" required>
-          <input type="number" name="vehicleYear" placeholder="Année">
-          <input type="text" name="licensePlate" placeholder="Immatriculation">
-          <input type="number" name="mileage" placeholder="Kilométrage">
-          <input type="text" name="pickupLocation" placeholder="Lieu prise en charge" required>
-          <input type="text" name="deliveryLocation" placeholder="Lieu livraison" required>
-          <input type="date" name="pickupDate">
-          <input type="date" name="deliveryDate">
-          <input type="text" name="clientName" placeholder="Nom client" required>
-          <input type="email" name="clientEmail" placeholder="Email client" required>
-          <input type="text" name="clientPhone" placeholder="Téléphone client">
-        </div>
-        <button type="submit" class="btn-enhanced btn-primary">Créer mission</button>
-      </form>
-
-      <h3>Missions archivées</h3>
-      <div id="missionsList"></div>
-    </div>
-  </section>
-
-  <!-- PRESTATAIRE -->
-  <section id="prestataire" class="section">
-    <h2>Accéder à une mission</h2>
-    <form id="accessForm" class="enhanced-form">
-      <input type="text" id="missionCode" placeholder="Code mission" required>
-      <button type="submit" class="btn-enhanced btn-primary">Accéder</button>
-    </form>
-
-    <div id="missionDetails" style="display:none; margin-top:20px;">
-      <div id="missionInfo"></div>
-
-      <!-- Phase Départ -->
-      <div id="departurePhase" class="mission-phase">
-        <h3 class="phase-title"><i class="fas fa-play-circle"></i> Phase Départ</h3>
-        
-        <!-- Checklist -->
-        <div id="checklist" class="enhanced-form-section">
-          <div class="section-title"><i class="fas fa-list-check"></i> Checklist</div>
-          <label><input type="checkbox" name="vehiclePapers" value="ok"> Papiers véhicule OK</label>
-          <label><input type="checkbox" name="gps" value="ok"> GPS fonctionnel</label>
-          <label><input type="checkbox" name="sdCard" value="ok"> Carte SD présente</label>
-          <label><input type="checkbox" name="safetyKit" value="ok"> Kit sécurité complet</label>
-          <label><input type="checkbox" name="spareWheel" value="ok"> Roue de secours</label>
-        </div>
-
-        <!-- Photos de départ -->
-        <div class="enhanced-form-section">
-          <h4><i class="fas fa-camera"></i> Photos de départ</h4>
-          <div class="photo-grid" id="departurePhotos">
-            <div class="photo-card">
-              <label>Compteur</label>
-              <input type="file" data-photo="compteur" accept="image/*" required>
-              <div class="photo-preview"></div>
-            </div>
-            <div class="photo-card">
-              <label>Face avant</label>
-              <input type="file" data-photo="face-avant" accept="image/*" required>
-              <div class="photo-preview"></div>
-            </div>
-            <div class="photo-card">
-              <label>Face arrière</label>
-              <input type="file" data-photo="face-arriere" accept="image/*" required>
-              <div class="photo-preview"></div>
-            </div>
-            <div class="photo-card">
-              <label>Latéral gauche avant</label>
-              <input type="file" data-photo="lateral-gauche-avant" accept="image/*" required>
-              <div class="photo-preview"></div>
-            </div>
-            <div class="photo-card">
-              <label>Latéral gauche arrière</label>
-              <input type="file" data-photo="lateral-gauche-arriere" accept="image/*" required>
-              <div class="photo-preview"></div>
-            </div>
-            <div class="photo-card">
-              <label>Latéral droit avant</label>
-              <input type="file" data-photo="lateral-droit-avant" accept="image/*" required>
-              <div class="photo-preview"></div>
-            </div>
-            <div class="photo-card">
-              <label>Latéral droit arrière</label>
-              <input type="file" data-photo="lateral-droit-arriere" accept="image/*" required>
-              <div class="photo-preview"></div>
-            </div>
-            <div class="photo-card">
-              <label>Moteur</label>
-              <input type="file" data-photo="moteur" accept="image/*" required>
-              <div class="photo-preview"></div>
-            </div>
-            <div class="photo-card">
-              <label>Intérieur</label>
-              <input type="file" data-photo="interieur" accept="image/*" required>
-              <div class="photo-preview"></div>
-            </div>
-            <div class="photo-card">
-              <label>Carnet d'entretien</label>
-              <input type="file" data-photo="carnet" accept="image/*" required>
-              <div class="photo-preview"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Observations de départ -->
-        <div class="enhanced-form-section">
-          <h4><i class="fas fa-edit"></i> Observations de départ</h4>
-          <textarea id="departureObservations" placeholder="Notez ici vos observations sur l'état du véhicule au départ..."></textarea>
-        </div>
-
-        <button type="button" id="validateDeparture" class="btn-enhanced btn-success" disabled>
-          <i class="fas fa-check"></i> Valider Départ
-        </button>
-      </div>
-
-      <!-- Phase Arrivée -->
-      <div id="arrivalPhase" class="mission-phase" style="display:none;">
-        <h3 class="phase-title"><i class="fas fa-flag-checkered"></i> Phase Arrivée</h3>
-        
-        <!-- Photos d'arrivée -->
-        <div class="enhanced-form-section">
-          <h4><i class="fas fa-camera"></i> Photos d'arrivée</h4>
-          <div class="photo-grid" id="arrivalPhotos">
-            <div class="photo-card">
-              <label>Compteur final</label>
-              <input type="file" data-photo="compteur-final" accept="image/*" required>
-              <div class="photo-preview"></div>
-            </div>
-            <div class="photo-card">
-              <label>État général final</label>
-              <input type="file" data-photo="etat-final" accept="image/*" required>
-              <div class="photo-preview"></div>
-            </div>
-            <div class="photo-card">
-              <label>Remise clés</label>
-              <input type="file" data-photo="remise-cles" accept="image/*" required>
-              <div class="photo-preview"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Observations d'arrivée -->
-        <div class="enhanced-form-section">
-          <h4><i class="fas fa-edit"></i> Observations d'arrivée</h4>
-          <textarea id="arrivalObservations" placeholder="Notez ici vos observations sur l'état du véhicule à l'arrivée..."></textarea>
-        </div>
-
-        <!-- Signature client -->
-        <div class="enhanced-form-section">
-          <h4><i class="fas fa-signature"></i> Signature du client</h4>
-          <div class="signature-section">
-            <canvas id="signatureCanvas" width="500" height="200"></canvas>
-            <div class="signature-controls">
-              <button type="button" id="clearSignature" class="btn-enhanced btn-secondary">
-                <i class="fas fa-eraser"></i> Effacer
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <button type="button" id="finalizeMission" class="btn-enhanced btn-success" disabled>
-          <i class="fas fa-check-double"></i> Finaliser Mission
-        </button>
-      </div>
-
-      <!-- Écran de fin -->
-      <div id="completionScreen" class="completion-screen" style="display:none;">
-        <div class="completion-content">
-          <i class="fas fa-check-circle success-icon"></i>
-          <h3>Mission Finalisée avec Succès !</h3>
-          <p>La mission a été complétée et le rapport est disponible.</p>
-          <button type="button" id="returnToHome" class="btn-enhanced btn-primary">
-            <i class="fas fa-home"></i> Retour Accueil Prestataire
-          </button>
-        </div>
-      </div>
-    </div>
   </section>
 
   <!-- CLIENT -->
   <section id="client" class="section">
-    <h2>Suivi de mission</h2>
-    <form id="trackingForm" class="enhanced-form">
-      <input type="text" id="trackingCode" placeholder="Code mission" required>
-      <button type="submit" class="btn-enhanced btn-primary">Suivre ma mission</button>
-    </form>
-    
-    <div id="trackingResult" style="display:none;">
-      <div id="trackingInfo"></div>
+    <div class="container">
+      <h2>Suivi de mission</h2>
+      <form id="trackingForm" class="enhanced-form">
+        <input type="text" id="trackingCode" placeholder="Code mission" required>
+        <button type="submit" class="btn-enhanced btn-primary">Suivre ma mission</button>
+      </form>
       
-      <!-- Statut de progression -->
-      <div id="progressTracker" class="progress-tracker">
-        <div class="progress-step" data-step="created">
-          <div class="step-icon"><i class="fas fa-plus"></i></div>
-          <div class="step-label">Mission créée</div>
+      <div id="trackingResult" style="display:none;">
+        <div id="trackingInfo"></div>
+        
+        <!-- Statut de progression -->
+        <div id="progressTracker" class="progress-tracker">
+          <div class="progress-step" data-step="created">
+            <div class="step-icon"><i class="fas fa-plus"></i></div>
+            <div class="step-label">Mission créée</div>
+          </div>
+          <div class="progress-step" data-step="in-progress">
+            <div class="step-icon"><i class="fas fa-road"></i></div>
+            <div class="step-label">En cours</div>
+          </div>
+          <div class="progress-step" data-step="departure-validated">
+            <div class="step-icon"><i class="fas fa-check"></i></div>
+            <div class="step-label">Départ validé</div>
+          </div>
+          <div class="progress-step" data-step="completed">
+            <div class="step-icon"><i class="fas fa-flag-checkered"></i></div>
+            <div class="step-label">Terminée</div>
+          </div>
         </div>
-        <div class="progress-step" data-step="in-progress">
-          <div class="step-icon"><i class="fas fa-road"></i></div>
-          <div class="step-label">En cours</div>
-        </div>
-        <div class="progress-step" data-step="departure-validated">
-          <div class="step-icon"><i class="fas fa-check"></i></div>
-          <div class="step-label">Départ validé</div>
-        </div>
-        <div class="progress-step" data-step="completed">
-          <div class="step-icon"><i class="fas fa-flag-checkered"></i></div>
-          <div class="step-label">Terminée</div>
-        </div>
-      </div>
 
-      <!-- Section rapport -->
-      <div id="downloadSection" style="display:none;">
-        <div class="report-section">
-          <h4><i class="fas fa-file-pdf"></i> Rapport de mission</h4>
-          <div class="report-actions">
-            <button id="downloadReport" class="btn-enhanced btn-success">
-              <i class="fas fa-download"></i> Télécharger rapport PDF
-            </button>
-            <button id="emailReport" class="btn-enhanced btn-secondary">
-              <i class="fas fa-envelope"></i> Envoyer par email
-            </button>
+        <!-- Section rapport -->
+        <div id="downloadSection" style="display:none;">
+          <div class="report-section">
+            <h4><i class="fas fa-file-pdf"></i> Rapport de mission</h4>
+            <div class="report-actions">
+              <button id="downloadReport" class="btn-enhanced btn-success">
+                <i class="fas fa-download"></i> Télécharger rapport PDF
+              </button>
+              <button id="emailReport" class="btn-enhanced btn-secondary">
+                <i class="fas fa-envelope"></i> Envoyer par email
+              </button>
+            </div>
           </div>
         </div>
       </div>
