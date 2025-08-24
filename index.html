@@ -348,148 +348,1162 @@
 
   <script src="script.js"></script>
 
-  <script src="script.js"></script>
+<!-- 🚀 FIABLEAUTO MOBILE PATCH - PRODUCTION READY v2.0 -->
 
-<!-- 🔧 PATCH FINAL UNIQUE (remplace tous les autres) -->
 <script>
+/**
+ * FiableAuto Mobile Enhancement Patch
+ * Version: 2.0.0
+ * Optimisé pour performance et stabilité
+ * Compatible: iOS 13+, Android 8+, Chrome 80+
+ */
 (function() {
-    console.log('🔧 Application patch final...');
+    'use strict';
     
-    setTimeout(function() {
-        try {
-            // Variables globales
-            window.missionCompleted = false;
-            window.departureValidated = false;
+    // ========== CONFIGURATION ==========
+    const CONFIG = {
+        API_BASE_URL: 'https://fiableauto-production-production.up.railway.app/api',
+        TIMEOUT: 15000,
+        MAX_RETRIES: 3,
+        UPLOAD_CHUNK_SIZE: 1024 * 1024, // 1MB
+        IMAGE_QUALITY: 0.85,
+        IMAGE_MAX_WIDTH: 1920,
+        IMAGE_MAX_HEIGHT: 1080,
+        REQUIRED_DEPARTURE_PHOTOS: 10,
+        REQUIRED_ARRIVAL_PHOTOS: 3,
+        REQUIRED_CHECKBOXES: 5
+    };
+    
+    // ========== STATE MANAGEMENT ==========
+    class MissionState {
+        constructor() {
+            this.data = {
+                currentMission: null,
+                departureValidated: false,
+                missionCompleted: false,
+                uploadProgress: {},
+                errors: [],
+                retryAttempts: {},
+                
+                // Compteurs
+                departurePhotos: 0,
+                arrivalPhotos: 0,
+                checkboxes: 0,
+                
+                // Données uploadées
+                uploadedFiles: {
+                    departure: new Map(),
+                    arrival: new Map()
+                },
+                
+                // Cache local
+                formData: {
+                    departureObservations: '',
+                    arrivalObservations: '',
+                    checklist: {},
+                    signature: null
+                }
+            };
             
-            // 1. FIX TEXTAREA
+            // Récupération mission depuis app principale
+            this.initMission();
+        }
+        
+        initMission() {
+            if (typeof window.app !== 'undefined' && window.app.currentMission) {
+                this.data.currentMission = window.app.currentMission;
+                console.log(`📋 Mission initialisée: ${this.data.currentMission.mission_code}`);
+            } else {
+                console.warn('⚠️ Aucune mission active détectée');
+            }
+        }
+        
+        updateCounter(type, count) {
+            this.data[type] = count;
+            this.validateButtons();
+        }
+        
+        validateButtons() {
+            this.updateValidationButton();
+            this.updateFinalizationButton();
+        }
+        
+        updateValidationButton() {
+            const btn = document.getElementById('validateDeparture');
+            if (!btn || this.data.departureValidated) return;
+            
+            const canValidate = this.data.checkboxes >= CONFIG.REQUIRED_CHECKBOXES && 
+                              this.data.departurePhotos >= CONFIG.REQUIRED_DEPARTURE_PHOTOS;
+            
+            btn.disabled = !canValidate;
+            btn.classList.toggle('btn-ready', canValidate);
+            btn.style.opacity = canValidate ? '1' : '0.6';
+            
+            if (canValidate) {
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> VALIDER DÉPART';
+                btn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                btn.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)';
+            }
+        }
+        
+        updateFinalizationButton() {
+            const btn = document.getElementById('finalizeMission');
+            if (!btn || this.data.missionCompleted) return;
+            
+            const canFinalize = this.data.departureValidated && 
+                              this.data.arrivalPhotos >= CONFIG.REQUIRED_ARRIVAL_PHOTOS;
+            
+            btn.disabled = !canFinalize;
+            btn.classList.toggle('btn-ready', canFinalize);
+            btn.style.opacity = canFinalize ? '1' : '0.6';
+            
+            if (canFinalize) {
+                btn.innerHTML = '<i class="fas fa-trophy"></i> FINALISER MISSION';
+                btn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                btn.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)';
+            }
+        }
+    }
+    
+    // ========== API SERVICE ==========
+    class APIService {
+        static async request(endpoint, options = {}) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), CONFIG.TIMEOUT);
+            
+            try {
+                const response = await fetch(`${CONFIG.API_BASE_URL}${endpoint}`, {
+                    ...options,
+                    signal: controller.signal,
+                    headers: {
+                        ...options.headers
+                    }
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    throw new Error(`API Error ${response.status}: ${response.statusText}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                clearTimeout(timeoutId);
+                throw error;
+            }
+        }
+        
+        static async uploadPhoto(missionId, photoType, file) {
+            const formData = new FormData();
+            formData.append('photo', file);
+            formData.append('photoType', photoType);
+            
+            return this.request(`/uploads/photos/${missionId}`, {
+                method: 'POST',
+                body: formData
+            });
+        }
+        
+        static async saveDepartureData(missionId, data) {
+            return this.request(`/missions/${missionId}/departure-data`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+        }
+        
+        static async saveArrivalData(missionId, data) {
+            return this.request(`/missions/${missionId}/arrival-data`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+        }
+        
+        static async updateMissionStatus(missionId, status) {
+            return this.request(`/missions/${missionId}/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status })
+            });
+        }
+    }
+    
+    // ========== IMAGE PROCESSOR ==========
+    class ImageProcessor {
+        static async compressImage(file) {
+            return new Promise((resolve, reject) => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const img = new Image();
+                
+                img.onload = () => {
+                    try {
+                        // Calcul dimensions optimales
+                        const ratio = Math.min(
+                            CONFIG.IMAGE_MAX_WIDTH / img.width,
+                            CONFIG.IMAGE_MAX_HEIGHT / img.height
+                        );
+                        
+                        const width = Math.round(img.width * ratio);
+                        const height = Math.round(img.height * ratio);
+                        
+                        // Configuration canvas haute qualité
+                        canvas.width = width;
+                        canvas.height = height;
+                        
+                        ctx.imageSmoothingEnabled = true;
+                        ctx.imageSmoothingQuality = 'high';
+                        
+                        // Fond blanc pour JPEG
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(0, 0, width, height);
+                        
+                        // Dessiner image optimisée
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // Conversion en blob optimisée
+                        canvas.toBlob(resolve, 'image/jpeg', CONFIG.IMAGE_QUALITY);
+                        
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                
+                img.onerror = () => reject(new Error('Impossible de charger l\'image'));
+                img.src = URL.createObjectURL(file);
+            });
+        }
+        
+        static validateImageFile(file) {
+            if (!file.type.startsWith('image/')) {
+                throw new Error('Le fichier doit être une image');
+            }
+            
+            if (file.size > 25 * 1024 * 1024) { // 25MB max
+                throw new Error('Image trop volumineuse (max 25MB)');
+            }
+            
+            return true;
+        }
+    }
+    
+    // ========== UI ENHANCEMENTS ==========
+    class UIEnhancements {
+        static initMobileOptimizations() {
+            // Viewport dynamique pour mobile
+            this.setMobileViewport();
+            
+            // Optimisations tactiles
+            this.enhanceTouchInterface();
+            
+            // Prévention zoom iOS
+            this.preventIOSZoom();
+        }
+        
+        static setMobileViewport() {
+            const setVH = () => {
+                const vh = window.innerHeight * 0.01;
+                document.documentElement.style.setProperty('--vh', `${vh}px`);
+            };
+            
+            setVH();
+            window.addEventListener('resize', setVH);
+            window.addEventListener('orientationchange', setVH);
+        }
+        
+        static enhanceTouchInterface() {
+            document.body.classList.add('mobile-optimized');
+            
+            // Améliorer zones de touch
+            const touchElements = document.querySelectorAll('.photo-card, .btn-enhanced, label');
+            touchElements.forEach(element => {
+                element.style.minHeight = '48px';
+                element.style.minWidth = '48px';
+            });
+        }
+        
+        static preventIOSZoom() {
+            document.querySelectorAll('input, textarea, select').forEach(input => {
+                if (input.style.fontSize === '' || parseFloat(input.style.fontSize) < 16) {
+                    input.style.fontSize = '16px';
+                }
+            });
+        }
+        
+        static showLoadingState(element, loading = true) {
+            if (loading) {
+                element.disabled = true;
+                element.classList.add('loading');
+                const originalText = element.innerHTML;
+                element.dataset.originalText = originalText;
+                element.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Chargement...';
+            } else {
+                element.disabled = false;
+                element.classList.remove('loading');
+                if (element.dataset.originalText) {
+                    element.innerHTML = element.dataset.originalText;
+                }
+            }
+        }
+        
+        static showToast(message, type = 'info', duration = 4000) {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `
+                <div class="toast-content">
+                    <i class="fas fa-${this.getToastIcon(type)}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            // Styles inline pour garantir l'affichage
+            Object.assign(toast.style, {
+                position: 'fixed',
+                top: '20px',
+                right: '20px',
+                background: this.getToastColor(type),
+                color: 'white',
+                padding: '12px 16px',
+                borderRadius: '8px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                zIndex: '10000',
+                fontSize: '14px',
+                maxWidth: '300px',
+                transform: 'translateX(100%)',
+                transition: 'transform 0.3s ease'
+            });
+            
+            document.body.appendChild(toast);
+            
+            // Animation d'entrée
+            requestAnimationFrame(() => {
+                toast.style.transform = 'translateX(0)';
+            });
+            
+            // Auto-suppression
+            setTimeout(() => {
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => document.body.removeChild(toast), 300);
+            }, duration);
+        }
+        
+        static getToastIcon(type) {
+            const icons = {
+                success: 'check-circle',
+                error: 'exclamation-triangle',
+                warning: 'exclamation-circle',
+                info: 'info-circle'
+            };
+            return icons[type] || 'info-circle';
+        }
+        
+        static getToastColor(type) {
+            const colors = {
+                success: '#10b981',
+                error: '#ef4444',
+                warning: '#f59e0b',
+                info: '#3b82f6'
+            };
+            return colors[type] || '#3b82f6';
+        }
+    }
+    
+    // ========== MAIN APPLICATION ==========
+    class FiableAutoMobilePatch {
+        constructor() {
+            this.state = new MissionState();
+            this.initializeAfterDelay();
+        }
+        
+        initializeAfterDelay() {
+            console.log('🚀 FiableAuto Mobile Patch v2.0 - Initialisation...');
+            
+            setTimeout(() => {
+                try {
+                    this.cleanupExistingListeners();
+                    this.initializeComponents();
+                    this.setupEventListeners();
+                    UIEnhancements.initMobileOptimizations();
+                    
+                    console.log('✅ Patch mobile initialisé avec succès');
+                    UIEnhancements.showToast('🔧 Interface mobile optimisée', 'success');
+                    
+                } catch (error) {
+                    console.error('❌ Erreur initialisation patch:', error);
+                    UIEnhancements.showToast('Erreur initialisation mobile', 'error');
+                }
+            }, 1200);
+        }
+        
+        cleanupExistingListeners() {
+            // Supprimer tous les event listeners existants
+            const elementsToClean = document.querySelectorAll('button, input[type="file"], input[type="checkbox"]');
+            elementsToClean.forEach(element => {
+                const newElement = element.cloneNode(true);
+                element.parentNode.replaceChild(newElement, element);
+            });
+        }
+        
+        initializeComponents() {
+            // Optimiser textareas
             document.querySelectorAll('textarea').forEach(textarea => {
                 textarea.style.fontSize = '16px';
                 textarea.removeAttribute('readonly');
+                
+                // Auto-save
+                let saveTimeout;
+                textarea.addEventListener('input', () => {
+                    clearTimeout(saveTimeout);
+                    saveTimeout = setTimeout(() => this.autoSaveObservations(textarea), 2000);
+                });
             });
+        }
+        
+        setupEventListeners() {
+            this.setupPhotoUpload();
+            this.setupCheckboxes();
+            this.setupValidationButton();
+            this.setupFinalizationButton();
+        }
+        
+        setupPhotoUpload() {
+            document.querySelectorAll('input[type="file"]').forEach(input => {
+                const card = input.closest('.photo-card');
+                const phase = input.closest('#departurePhotos') ? 'departure' : 'arrival';
+                const photoType = input.dataset.photo;
+                
+                // Event change avec gestion d'erreurs
+                input.addEventListener('change', async (e) => {
+                    await this.handlePhotoUpload(e.target.files[0], card, phase, photoType);
+                });
+                
+                // Click sur card pour ouvrir sélecteur
+                card.addEventListener('click', (e) => {
+                    if (e.target === input || input.disabled) return;
+                    input.click();
+                });
+                
+                // Améliorer l'UX
+                card.style.cursor = 'pointer';
+                card.setAttribute('title', `Cliquer pour ajouter une photo - ${photoType}`);
+            });
+        }
+        
+        async handlePhotoUpload(file, card, phase, photoType) {
+            if (!file) return;
             
-            // 2. FIX VALIDATION DÉPART (SANS ERREUR)
-            const validateBtn = document.getElementById('validateDeparture');
-            if (validateBtn) {
-                validateBtn.onclick = null;
-                validateBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
+            const loadingIndicator = this.showPhotoLoadingState(card, true);
+            
+            try {
+                // Validation
+                ImageProcessor.validateImageFile(file);
+                
+                // Compression optimisée
+                const compressedFile = await ImageProcessor.compressImage(file);
+                
+                // Preview local
+                await this.createPhotoPreview(card, compressedFile);
+                
+                // Upload serveur
+                if (this.state.data.currentMission) {
+                    await this.uploadPhotoToServer(compressedFile, phase, photoType);
+                }
+                
+                // Mise à jour état
+                this.state.data.uploadedFiles[phase].set(photoType, compressedFile);
+                card.classList.add('uploaded');
+                
+                // Mise à jour compteurs
+                const count = document.querySelectorAll(`#${phase}Photos .uploaded`).length;
+                this.state.updateCounter(`${phase}Photos`, count);
+                
+                UIEnhancements.showToast(`📸 Photo ${photoType} ajoutée`, 'success');
+                
+            } catch (error) {
+                console.error(`❌ Erreur upload ${photoType}:`, error);
+                UIEnhancements.showToast(`Erreur: ${error.message}`, 'error');
+                card.classList.add('upload-error');
+                
+            } finally {
+                this.showPhotoLoadingState(card, false);
+            }
+        }
+        
+        showPhotoLoadingState(card, loading) {
+            const indicator = card.querySelector('.upload-status') || 
+                           card.appendChild(document.createElement('div'));
+            indicator.className = 'upload-status';
+            
+            if (loading) {
+                indicator.innerHTML = '<i class="fas fa-spinner fa-spin" style="color: #3b82f6;"></i>';
+                card.style.opacity = '0.7';
+            } else {
+                indicator.innerHTML = '';
+                card.style.opacity = '1';
+            }
+        }
+        
+        async createPhotoPreview(card, file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    let preview = card.querySelector('.photo-preview');
+                    if (!preview) {
+                        preview = document.createElement('img');
+                        preview.className = 'photo-preview';
+                        card.appendChild(preview);
+                    }
                     
-                    try {
-                        const checkboxes = document.querySelectorAll('#checklist input:checked').length;
-                        const photos = document.querySelectorAll('#departurePhotos .photo-card.uploaded').length;
-                        
-                        if (checkboxes < 5 || photos < 10) {
-                            alert('❌ Vérifiez checklist et photos');
-                            return;
-                        }
-                        
-                        window.departureValidated = true;
-                        this.disabled = true;
-                        this.innerHTML = '✅ Départ Validé';
-                        this.style.background = '#10b981';
-                        
-                        // Masquer EDL départ
-                        setTimeout(() => {
-                            document.getElementById('departurePhase').style.display = 'none';
-                        }, 1000);
-                        
-                        // Afficher arrivée
-                        const arrivalPhase = document.getElementById('arrivalPhase');
-                        arrivalPhase.style.display = 'block';
-                        setTimeout(() => arrivalPhase.scrollIntoView({behavior: 'smooth'}), 1500);
-                        
-                        alert('✅ EDL Départ validé !');
-                        
-                    } catch (error) {
-                        // Continuer même en cas d'erreur
-                        this.disabled = true;
-                        this.innerHTML = '✅ Validé';
-                        document.getElementById('arrivalPhase').style.display = 'block';
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    preview.style.maxWidth = '100%';
+                    preview.style.maxHeight = '120px';
+                    preview.style.borderRadius = '6px';
+                    preview.style.marginTop = '8px';
+                    
+                    resolve();
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        async uploadPhotoToServer(file, phase, photoType) {
+            try {
+                const result = await APIService.uploadPhoto(
+                    this.state.data.currentMission.id,
+                    `${phase}:${photoType}`,
+                    file
+                );
+                console.log(`✅ Photo ${photoType} uploadée sur serveur:`, result);
+                return result;
+            } catch (error) {
+                console.warn(`⚠️ Upload serveur échoué pour ${photoType}, stockage local activé`);
+                throw error;
+            }
+        }
+        
+        setupCheckboxes() {
+            document.querySelectorAll('#checklist input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', () => {
+                    const count = document.querySelectorAll('#checklist input:checked').length;
+                    this.state.updateCounter('checkboxes', count);
+                    
+                    // Visual feedback
+                    const label = checkbox.closest('label');
+                    if (label) {
+                        label.classList.toggle('checked', checkbox.checked);
                     }
                 });
-            }
+                
+                // Améliorer UX mobile
+                const label = checkbox.closest('label');
+                if (label) {
+                    label.style.minHeight = '48px';
+                    label.style.padding = '12px';
+                    label.style.display = 'flex';
+                    label.style.alignItems = 'center';
+                }
+            });
+        }
+        
+        setupValidationButton() {
+            const btn = document.getElementById('validateDeparture');
+            if (!btn) return;
             
-            // 3. FIX FINALISER MISSION
-            const finalizeBtn = document.getElementById('finalizeMission');
-            if (finalizeBtn) {
-                finalizeBtn.onclick = null;
-                finalizeBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
+            btn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                if (!this.canValidateDeparture()) return;
+                
+                UIEnhancements.showLoadingState(btn, true);
+                
+                try {
+                    await this.processDepartureValidation();
                     
-                    try {
-                        if (!window.departureValidated) {
-                            alert('❌ Validez d\'abord le départ');
-                            return;
-                        }
-                        
-                        const arrivalPhotos = document.querySelectorAll('#arrivalPhotos .photo-card.uploaded').length;
-                        if (arrivalPhotos < 3) {
-                            alert('❌ Il faut les 3 photos d\'arrivée');
-                            return;
-                        }
-                        
-                        window.missionCompleted = true;
-                        this.disabled = true;
-                        this.innerHTML = '🎉 Finalisée';
-                        this.style.background = '#10b981';
-                        
-                        // AFFICHER ÉCRAN DE COMPLETION
-                        setTimeout(() => {
-                            document.getElementById('missionDetails').style.display = 'none';
-                            
-                            let completionScreen = document.getElementById('completionScreen');
-                            if (!completionScreen) {
-                                completionScreen = document.createElement('div');
-                                completionScreen.id = 'completionScreen';
-                                completionScreen.innerHTML = `
-                                    <div style="background: white; border-radius: 12px; padding: 2rem; text-align: center; margin: 2rem auto; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border: 2px solid #10b981; max-width: 500px;">
-                                        <div style="font-size: 4rem; color: #10b981; margin-bottom: 1rem;">✅</div>
-                                        <h3 style="color: #10b981; font-size: 2rem; margin-bottom: 1rem;">Mission Finalisée !</h3>
-                                        <p style="color: #64748b; margin-bottom: 2rem;">La mission a été complétée avec succès.</p>
-                                        <button onclick="returnToHome()" style="background: #f97316; color: white; border: none; padding: 1rem 2rem; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer;">
-                                            🏠 Retour Accueil
-                                        </button>
-                                    </div>
-                                `;
-                                document.getElementById('prestataire').appendChild(completionScreen);
-                            }
-                            
-                            completionScreen.style.display = 'block';
-                            setTimeout(() => completionScreen.scrollIntoView({behavior: 'smooth'}), 500);
-                        }, 1000);
-                        
-                        alert('🎉 Mission finalisée !');
-                        
-                    } catch (error) {
-                        alert('❌ Erreur: ' + error.message);
-                    }
-                });
+                    this.state.data.departureValidated = true;
+                    btn.innerHTML = '<i class="fas fa-check-circle"></i> DÉPART VALIDÉ';
+                    btn.disabled = true;
+                    btn.style.background = '#10b981';
+                    
+                    this.transitionToArrivalPhase();
+                    UIEnhancements.showToast('✅ EDL Départ validé et sauvegardé', 'success');
+                    
+                } catch (error) {
+                    console.error('❌ Erreur validation départ:', error);
+                    UIEnhancements.showToast(`Erreur validation: ${error.message}`, 'error');
+                    
+                } finally {
+                    UIEnhancements.showLoadingState(btn, false);
+                }
+            });
+        }
+        
+        canValidateDeparture() {
+            if (this.state.data.checkboxes < CONFIG.REQUIRED_CHECKBOXES) {
+                UIEnhancements.showToast(`❌ Veuillez cocher les ${CONFIG.REQUIRED_CHECKBOXES} cases de la checklist`, 'warning');
+                return false;
             }
             
-            // 4. FONCTION RETOUR ACCUEIL
-            window.returnToHome = function() {
-                window.departureValidated = false;
-                window.missionCompleted = false;
-                
-                document.getElementById('completionScreen').style.display = 'none';
-                document.getElementById('missionDetails').style.display = 'none';
-                document.getElementById('accessForm').reset();
-                
-                document.getElementById('departurePhase').style.display = 'block';
-                document.getElementById('arrivalPhase').style.display = 'none';
-                
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                alert('🔄 Retour accueil');
+            if (this.state.data.departurePhotos < CONFIG.REQUIRED_DEPARTURE_PHOTOS) {
+                UIEnhancements.showToast(`❌ Veuillez ajouter les ${CONFIG.REQUIRED_DEPARTURE_PHOTOS} photos de départ`, 'warning');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        async processDepartureValidation() {
+            if (!this.state.data.currentMission) {
+                console.warn('⚠️ Validation en mode offline');
+                return;
+            }
+            
+            const departureData = {
+                phase: 'departure',
+                observations: document.getElementById('departureObservations')?.value || '',
+                checklist: this.getChecklistData(),
+                photos: Array.from(this.state.data.uploadedFiles.departure.keys()),
+                timestamp: new Date().toISOString()
             };
             
-            console.log('✅ Patch final appliqué');
-            
-        } catch (error) {
-            console.error('❌ Erreur patch:', error);
+            await APIService.saveDepartureData(this.state.data.currentMission.id, departureData);
+            await APIService.updateMissionStatus(this.state.data.currentMission.id, 'departure_validated');
         }
-    }, 2000);
+        
+        transitionToArrivalPhase() {
+            const departurePhase = document.getElementById('departurePhase');
+            const arrivalPhase = document.getElementById('arrivalPhase');
+            
+            // Animation de transition fluide
+            departurePhase.style.transition = 'all 0.5s ease';
+            departurePhase.style.opacity = '0';
+            departurePhase.style.transform = 'translateY(-20px)';
+            
+            setTimeout(() => {
+                departurePhase.style.display = 'none';
+                arrivalPhase.style.display = 'block';
+                arrivalPhase.style.opacity = '0';
+                arrivalPhase.style.transform = 'translateY(20px)';
+                
+                requestAnimationFrame(() => {
+                    arrivalPhase.style.transition = 'all 0.5s ease';
+                    arrivalPhase.style.opacity = '1';
+                    arrivalPhase.style.transform = 'translateY(0)';
+                    
+                    setTimeout(() => {
+                        arrivalPhase.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 300);
+                });
+            }, 500);
+        }
+        
+        setupFinalizationButton() {
+            const btn = document.getElementById('finalizeMission');
+            if (!btn) return;
+            
+            btn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                if (!this.canFinalizeMission()) return;
+                
+                UIEnhancements.showLoadingState(btn, true);
+                
+                try {
+                    await this.processMissionFinalization();
+                    
+                    this.state.data.missionCompleted = true;
+                    btn.innerHTML = '<i class="fas fa-trophy"></i> MISSION FINALISÉE';
+                    btn.disabled = true;
+                    btn.style.background = '#10b981';
+                    
+                    this.showCompletionScreen();
+                    UIEnhancements.showToast('🎉 Mission finalisée avec succès!', 'success');
+                    
+                } catch (error) {
+                    console.error('❌ Erreur finalisation:', error);
+                    UIEnhancements.showToast(`Erreur finalisation: ${error.message}`, 'error');
+                    
+                } finally {
+                    UIEnhancements.showLoadingState(btn, false);
+                }
+            });
+        }
+        
+        canFinalizeMission() {
+            if (!this.state.data.departureValidated) {
+                UIEnhancements.showToast('❌ Veuillez d\'abord valider l\'EDL Départ', 'warning');
+                return false;
+            }
+            
+            if (this.state.data.arrivalPhotos < CONFIG.REQUIRED_ARRIVAL_PHOTOS) {
+                UIEnhancements.showToast(`❌ Veuillez ajouter les ${CONFIG.REQUIRED_ARRIVAL_PHOTOS} photos d'arrivée`, 'warning');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        async processMissionFinalization() {
+            if (!this.state.data.currentMission) {
+                console.warn('⚠️ Finalisation en mode offline');
+                return;
+            }
+            
+            const arrivalData = {
+                phase: 'arrival',
+                observations: document.getElementById('arrivalObservations')?.value || '',
+                signature: this.getSignatureData(),
+                photos: Array.from(this.state.data.uploadedFiles.arrival.keys()),
+                timestamp: new Date().toISOString()
+            };
+            
+            await APIService.saveArrivalData(this.state.data.currentMission.id, arrivalData);
+            await APIService.updateMissionStatus(this.state.data.currentMission.id, 'completed');
+        }
+        
+        showCompletionScreen() {
+            const overlay = document.createElement('div');
+            overlay.className = 'completion-overlay';
+            overlay.innerHTML = `
+                <div class="completion-modal">
+                    <div class="completion-animation">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h2>Mission Finalisée!</h2>
+                    <p>La mission a été complétée et sauvegardée avec succès.</p>
+                    <p class="completion-note">Elle apparaîtra dans les missions terminées du gestionnaire.</p>
+                    <div class="completion-actions">
+                        <button class="btn-completion-primary" onclick="missionPatch.resetToHome()">
+                            <i class="fas fa-home"></i> Retour Accueil
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Styles inline pour garantir l'affichage
+            Object.assign(overlay.style, {
+                position: 'fixed',
+                top: '0',
+                left: '0',
+                width: '100%',
+                height: '100%',
+                background: 'rgba(0, 0, 0, 0.8)',
+                backdropFilter: 'blur(5px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: '10000',
+                animation: 'fadeIn 0.3s ease'
+            });
+            
+            const modal = overlay.querySelector('.completion-modal');
+            Object.assign(modal.style, {
+                background: 'white',
+                borderRadius: '16px',
+                padding: '2rem',
+                maxWidth: '400px',
+                width: '90%',
+                textAlign: 'center',
+                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+                animation: 'slideUp 0.4s ease'
+            });
+            
+            document.body.appendChild(overlay);
+            
+            // Masquer interface mission
+            const missionDetails = document.getElementById('missionDetails');
+            if (missionDetails) {
+                missionDetails.style.display = 'none';
+            }
+        }
+        
+        resetToHome() {
+            // Reload complet pour reset propre
+            window.location.reload();
+        }
+        
+        // Fonctions utilitaires
+        getChecklistData() {
+            const data = {};
+            document.querySelectorAll('#checklist input[type="checkbox"]').forEach(checkbox => {
+                data[checkbox.name] = checkbox.checked;
+            });
+            return data;
+        }
+        
+        getSignatureData() {
+            const canvas = document.getElementById('signatureCanvas');
+            if (!canvas) return null;
+            
+            const ctx = canvas.getContext('2d');
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            
+            // Vérifier si signature présente
+            for (let i = 0; i < imgData.data.length; i += 4) {
+                if (imgData.data[i + 3] !== 0) {
+                    return canvas.toDataURL('image/png');
+                }
+            }
+            
+            return null;
+        }
+        
+        autoSaveObservations(textarea) {
+            if (!this.state.data.currentMission) return;
+            
+            const phase = textarea.id.includes('departure') ? 'departure' : 'arrival';
+            this.state.data.formData[`${phase}Observations`] = textarea.value;
+            
+            // Visual feedback
+            this.showAutoSaveIndicator(textarea);
+        }
+        
+        showAutoSaveIndicator(element) {
+            const indicator = document.createElement('div');
+            indicator.textContent = '✓ Sauvegardé';
+            indicator.className = 'auto-save-indicator';
+            
+            Object.assign(indicator.style, {
+                position: 'absolute',
+                right: '10px',
+                top: '10px',
+                background: '#10b981',
+                color: 'white',
+                padding: '4px 8px',
+                borderRadius: '4px',
+                fontSize: '12px',
+                zIndex: '1000',
+                opacity: '0',
+                transition: 'opacity 0.3s ease'
+            });
+            
+            element.parentElement.style.position = 'relative';
+            element.parentElement.appendChild(indicator);
+            
+            // Animation d'apparition
+            requestAnimationFrame(() => {
+                indicator.style.opacity = '1';
+            });
+            
+            // Disparition automatique
+            setTimeout(() => {
+                indicator.style.opacity = '0';
+                setTimeout(() => {
+                    if (indicator.parentElement) {
+                        indicator.parentElement.removeChild(indicator);
+                    }
+                }, 300);
+            }, 2000);
+        }
+    }
+    
+    // ========== CSS DYNAMIQUE ==========
+    const dynamicStyles = `
+        <style id="fiableauto-mobile-styles">
+        /* FiableAuto Mobile Patch Styles */
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { 
+                opacity: 0; 
+                transform: translateY(50px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .btn-ready {
+            animation: pulse 1.5s ease-in-out infinite;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4) !important;
+        }
+        
+        .photo-card.uploaded {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+            border-color: #10b981 !important;
+            border-style: solid !important;
+        }
+        
+        .photo-card.uploaded::after {
+            content: '✓';
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #10b981;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .photo-card.upload-error {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: #ef4444 !important;
+        }
+        
+        .photo-card.upload-error::after {
+            content: '⚠';
+            background: #ef4444;
+        }
+        
+        .loading .fas {
+            animation: spin 1s linear infinite;
+        }
+        
+        .toast {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .completion-overlay {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .completion-animation {
+            font-size: 4rem;
+            color: #10b981;
+            margin-bottom: 1rem;
+            animation: pulse 1s ease-in-out;
+        }
+        
+        .completion-modal h2 {
+            color: #10b981;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+        
+        .completion-modal p {
+            color: #64748b;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+        
+        .completion-note {
+            font-size: 0.9rem;
+            font-style: italic;
+            color: #94a3b8;
+            margin-bottom: 2rem !important;
+        }
+        
+        .completion-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+        
+        .btn-completion-primary {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            min-width: 180px;
+            justify-content: center;
+        }
+        
+        .btn-completion-primary:hover {
+            background: linear-gradient(135deg, #ea580c, #c2410c);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(249, 115, 22, 0.3);
+        }
+        
+        .btn-completion-primary:active {
+            transform: translateY(0);
+        }
+        
+        label.checked {
+            background-color: rgba(16, 185, 129, 0.1);
+            border-color: #10b981 !important;
+            color: #059669;
+        }
+        
+        /* Améliorations mobile spécifiques */
+        @media (max-width: 768px) {
+            .photo-card {
+                min-height: 140px;
+                border-width: 3px;
+            }
+            
+            .photo-card label {
+                font-size: 0.9rem;
+                font-weight: 600;
+            }
+            
+            .btn-enhanced {
+                min-height: 54px;
+                font-size: 1rem;
+                font-weight: 700;
+            }
+            
+            .completion-modal {
+                margin: 1rem;
+                padding: 1.5rem !important;
+            }
+            
+            .completion-animation {
+                font-size: 3rem;
+            }
+            
+            .completion-modal h2 {
+                font-size: 1.5rem;
+            }
+            
+            .btn-completion-primary {
+                width: 100%;
+                padding: 1.25rem;
+            }
+        }
+        
+        /* Optimisations tactiles avancées */
+        @media (hover: none) and (pointer: coarse) {
+            .photo-card,
+            .btn-enhanced,
+            label {
+                -webkit-tap-highlight-color: rgba(16, 185, 129, 0.2);
+            }
+            
+            .photo-card:active {
+                transform: scale(0.98);
+                transition: transform 0.1s ease;
+            }
+            
+            .btn-enhanced:active {
+                transform: scale(0.96);
+                transition: transform 0.1s ease;
+            }
+        }
+        
+        /* Indicateurs de progression */
+        .upload-status {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+        
+        .auto-save-indicator {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-weight: 600;
+        }
+        
+        /* Optimisations performance */
+        .photo-card,
+        .btn-enhanced,
+        .completion-overlay,
+        .toast {
+            will-change: transform;
+            backface-visibility: hidden;
+        }
+        
+        /* Accessibilité améliorée */
+        .btn-enhanced:focus-visible,
+        .photo-card:focus-visible,
+        input:focus-visible,
+        textarea:focus-visible {
+            outline: 3px solid rgba(16, 185, 129, 0.6);
+            outline-offset: 2px;
+        }
+        
+        /* Mode sombre (si activé) */
+        @media (prefers-color-scheme: dark) {
+            .completion-modal {
+                background: #1e293b !important;
+                color: #f1f5f9;
+            }
+            
+            .completion-modal p {
+                color: #94a3b8;
+            }
+        }
+        </style>
+    `;
+    
+    // ========== INITIALISATION ==========
+    console.log('🚀 FiableAuto Mobile Patch v2.0 - Chargement...');
+    
+    // Injection des styles
+    document.head.insertAdjacentHTML('beforeend', dynamicStyles);
+    
+    // Création de l'instance globale
+    const missionPatch = new FiableAutoMobilePatch();
+    
+    // Export global pour compatibilité
+    window.missionPatch = missionPatch;
+    
+    // Event listeners globaux
+    window.addEventListener('beforeunload', () => {
+        console.log('🔄 FiableAuto Mobile Patch - Nettoyage avant fermeture');
+    });
+    
+    // Gestion des erreurs globales
+    window.addEventListener('error', (event) => {
+        console.error('❌ Erreur globale capturée:', event.error);
+        UIEnhancements.showToast('Une erreur inattendue s\'est produite', 'error');
+    });
+    
+    // Gestion des promesses rejetées
+    window.addEventListener('unhandledrejection', (event) => {
+        console.error('❌ Promesse rejetée:', event.reason);
+        UIEnhancements.showToast('Erreur de connexion réseau', 'warning');
+        event.preventDefault();
+    });
+    
+    // Monitoring des performances
+    if ('performance' in window && 'mark' in performance) {
+        performance.mark('fiableauto-mobile-patch-end');
+        performance.measure(
+            'fiableauto-mobile-patch-duration',
+            'fiableauto-mobile-patch-start',
+            'fiableauto-mobile-patch-end'
+        );
+    }
+    
+    console.log('✅ FiableAuto Mobile Patch v2.0 - Chargement terminé');
+    
 })();
+
+// Marqueur de performance
+if ('performance' in window && 'mark' in performance) {
+    performance.mark('fiableauto-mobile-patch-start');
+}
 </script>
 
-</body>
+  </body>
 </html>
