@@ -347,5 +347,70 @@
   </div>
 
   <script src="script.js"></script>
+
+  <script src="script.js"></script>
+  
+  <!-- 🔧 PATCH MOBILE URGENT -->
+  <script>
+  (function() {
+      console.log('🔧 Chargement patch mobile...');
+      
+      setTimeout(function() {
+          try {
+              // 1. FIX TEXTAREA
+              document.querySelectorAll('textarea').forEach(textarea => {
+                  textarea.style.fontSize = '16px';
+                  textarea.removeAttribute('readonly');
+                  
+                  textarea.addEventListener('touchstart', function(e) {
+                      e.stopPropagation();
+                      this.focus();
+                  }, { passive: false });
+              });
+              
+              // 2. FIX VALIDATION DÉPART
+              const validateBtn = document.getElementById('validateDeparture');
+              if (validateBtn) {
+                  validateBtn.onclick = null;
+                  
+                  validateBtn.addEventListener('click', function(e) {
+                      e.preventDefault();
+                      
+                      const checkboxes = document.querySelectorAll('#checklist input:checked').length;
+                      const photos = document.querySelectorAll('.photo-card.uploaded').length;
+                      
+                      if (checkboxes < 5) {
+                          alert('❌ Cochez les 5 cases de la checklist');
+                          return;
+                      }
+                      
+                      if (photos < 10) {
+                          alert('❌ Uploadez les 10 photos requises');
+                          return;
+                      }
+                      
+                      this.disabled = true;
+                      this.innerHTML = '✅ Validé';
+                      this.style.background = '#10b981';
+                      
+                      const arrivalPhase = document.getElementById('arrivalPhase');
+                      if (arrivalPhase) {
+                          arrivalPhase.style.display = 'block';
+                          setTimeout(() => arrivalPhase.scrollIntoView({behavior: 'smooth'}), 500);
+                      }
+                      
+                      alert('✅ EDL Départ validé !');
+                  });
+              }
+              
+              console.log('✅ Patch mobile appliqué');
+              
+          } catch (error) {
+              console.error('❌ Erreur patch:', error);
+          }
+      }, 2000);
+  })();
+  </script>
 </body>
 </html>
+
