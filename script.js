@@ -348,6 +348,7 @@ class FiableAutoApp {
         if (observations) observations.disabled = true;
     }
 
+    // ✅ NOUVEAU : Fonction modifiée avec scroll automatique
     switchToArrivalPhase() {
         const departurePhase = document.getElementById('departurePhase');
         const arrivalPhase = document.getElementById('arrivalPhase');
@@ -355,10 +356,20 @@ class FiableAutoApp {
         if (departurePhase) departurePhase.style.opacity = '0.6';
         if (arrivalPhase) {
             arrivalPhase.style.display = 'block';
-            arrivalPhase.scrollIntoView({ behavior: 'smooth' });
+            
+            // ✅ NOUVEAU : Scroll automatique vers la phase arrivée
+            setTimeout(() => {
+                arrivalPhase.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start' 
+                });
+            }, 300); // Petit délai pour laisser l'affichage se faire
         }
         
         this.currentPhase = 'arrival';
+        
+        // ✅ BONUS : Notification visuelle du changement de phase
+        this.showNotification('📍 Passage à la phase d\'arrivée', 'info');
     }
 
     async saveDepartureData() {
